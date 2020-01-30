@@ -27,14 +27,17 @@ sealed class JsonConfiguration(fileName: String) : Configuration()
     init
     {
         path = Paths.get("$CONFIG_DIR/$fileName.json")
-        val config = gson.fromJson(Files.newBufferedReader(path), JsonObject::class.java)
-        if (config != null)
+        if (Files.exists(path))
         {
-            for ((key, value) in config.asJsonObject.entrySet())
+            val config = gson.fromJson(Files.newBufferedReader(path), JsonObject::class.java)
+            if (config != null)
             {
-                settings[key] = value.asString
+                for ((key, value) in config.asJsonObject.entrySet())
+                {
+                    settings[key] = value.asString
+                }
+                log.info("Loaded $fileName config.")
             }
-            log.info("Loaded $fileName config.")
         }
     }
 
@@ -77,7 +80,7 @@ class UserConfiguration private constructor() : JsonConfiguration("app-preferenc
     @Expose val alwaysOnTop = SimpleBooleanProperty(settings["alwaysOnTop"]?.toBoolean() ?: false)
     @Expose val passwordGenLength = SimpleIntegerProperty(settings["passwordGenLength"]?.toInt() ?: 10)
     @Expose val includeSymbols = SimpleBooleanProperty(settings["includeSymbols"]?.toBoolean() ?: false)
-    @Expose val hidePassword = SimpleBooleanProperty(settings["hidePassword"]?.toBoolean() ?: false)
+    @Expose val hidePassword = SimpleBooleanProperty(settings["hidePassword"]?.toBoolean() ?: true)
     @Expose val acceptCertificates = SimpleBooleanProperty(settings["acceptCertificates"]?.toBoolean() ?: false)
     @Expose val proxy = SimpleBooleanProperty(settings["proxy"]?.toBoolean() ?: false)
 
