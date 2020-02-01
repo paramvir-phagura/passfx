@@ -193,7 +193,6 @@ class MainViewController : Controller()
     fun quit()
     {
         Platform.exit()
-        exitProcess(0)
     }
 
     fun newAccount()
