@@ -26,7 +26,6 @@ import tornadofx.*
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.Paths
-import kotlin.system.exitProcess
 
 class MainViewController : Controller()
 {
@@ -130,6 +129,7 @@ class MainViewController : Controller()
 
     fun openDatabaseFromURL()
     {
+        TODO("Not implemented.")
     }
 
     @Throws(InvalidPasswordException::class, DuplicateDatabaseException::class, Exception::class)
@@ -152,10 +152,12 @@ class MainViewController : Controller()
 
     fun reloadDatabase()
     {
+        TODO("Not implemented.")
     }
 
     fun sync()
     {
+        TODO("Not implemented.")
     }
 
     fun changePassword()
@@ -184,10 +186,12 @@ class MainViewController : Controller()
 
     fun export()
     {
+        TODO("Not implemented.")
     }
 
     fun import()
     {
+        TODO("Not implemented.")
     }
 
     fun quit()
@@ -292,6 +296,7 @@ class MainViewController : Controller()
 
     fun sort()
     {
+        TODO("Not implemented.")
     }
 
     fun showSettingsView()
