@@ -2,7 +2,7 @@
 A fork of the Universal Password Manager project by Adrian Smith.
 
 ## About
-A rewrite of the [original app](https://github.com/adrian/upm-swing) in [Kotlin](https://github.com/JetBrains/kotlin) and [TornadoFX](https://github.com/edvin/tornadofx) solely for education purposes.
+PassFX is a rewrite of the [original app](https://github.com/adrian/upm-swing) in [Kotlin](https://github.com/JetBrains/kotlin) and [TornadoFX](https://github.com/edvin/tornadofx) solely for educational purposes.
 
 ## Screenshots
 ![screenshot1](https://i.imgur.com/CRH7kxi.png)
