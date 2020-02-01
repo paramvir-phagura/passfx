@@ -20,7 +20,7 @@ class UPM : App(MainView::class)
 
     override fun start(stage: Stage)
     {
-        stage.width = 450.0
+        stage.width = 465.0
         stage.height = 500.0
         stage.icons.addAll(Image("images/icon.png"))
 

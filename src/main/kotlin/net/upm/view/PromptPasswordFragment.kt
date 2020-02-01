@@ -36,7 +36,7 @@ class PromptPasswordFragment() : Fragment("Password")
             alignment = Pos.CENTER
             spacing = 15.0
         }
-        padding = Insets(10.0, 10.0, 10.0, 10.0)
+        padding = Insets(10.0, 10.0, 15.0, 10.0)
     }
 
     fun submit(cancel: Boolean = false)
