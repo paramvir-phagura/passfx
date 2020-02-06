@@ -30,9 +30,6 @@ class StorageInputController : Controller()
                 dirField.textProperty().value = path
                 dirField.positionCaret(path.length)
             }
-        } else
-        {
-            println("Invalid directory")
         }
     }
 }

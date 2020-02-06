@@ -30,7 +30,7 @@ class Account private constructor()
         this.notes.value = notes
     }
 
-    override fun toString() = name.get()
+    override fun toString() = name.value
 
     class Model(account: Account = Account()) : ItemViewModel<Account>(account)
     {
