@@ -1,4 +1,4 @@
-package net.upm.view.wizard
+package net.upm.view
 
 import javafx.geometry.Insets
 import javafx.geometry.Pos
