@@ -18,7 +18,7 @@ import net.upm.util.config.UserConfiguration
 import net.upm.util.database
 import net.upm.util.openUrl
 import net.upm.view.*
-import net.upm.view.wizard.DatabasePropertiesView
+import net.upm.view.wizard.ImportWizard
 import net.upm.view.wizard.NewAccountWizard
 import net.upm.view.wizard.NewDatabaseWizard
 import org.slf4j.LoggerFactory
@@ -191,7 +191,13 @@ class MainViewController : Controller()
 
     fun import()
     {
-        TODO("Not implemented.")
+        find(ImportWizard::class.java, scope = Scope()).apply {
+            onComplete {
+                DatabaseManager += dbModel.item
+                log.info("Imported ${dbModel.item.accounts.size} accounts.")
+            }
+            openModal()
+        }
     }
 
     fun quit()

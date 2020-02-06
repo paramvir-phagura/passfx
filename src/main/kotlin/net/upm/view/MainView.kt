@@ -56,7 +56,9 @@ class MainView : View("UPM")
                     }
                     separator()
                     item("Export").isDisable = true
-                    item("Import").isDisable = true
+                    item("Import") {
+                        action { controller.import() }
+                    }
                     separator()
                     item("Quit UPM").action { controller.quit() }
                 }

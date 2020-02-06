@@ -42,11 +42,11 @@ class GeneralInput : View("General")
     override val complete = dbModel.valid(dbModel.name)
 
     override val root = form {
-        add(fieldset(title) {
+        fieldset(title) {
             field("Name") {
                 textfield(dbModel.name).required()
             }
-        })
+        }
     }
 }
 
@@ -64,7 +64,6 @@ class StorageInput : View("Storage")
         fieldset(title) {
             field("Type") {
                 combobox(values = values().asList()) {
-                    toggleMap.parent = this@form
                     toggleMap {
                         LOCAL toggles {
                             Fieldset("Location").apply {
@@ -94,6 +93,7 @@ class StorageInput : View("Storage")
                             }
                         }
                     }
+                    toggleMap.parent = this@form
                 }
             }
         }
