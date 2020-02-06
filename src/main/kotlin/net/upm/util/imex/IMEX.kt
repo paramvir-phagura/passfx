@@ -126,7 +126,7 @@ class LastPassIMEX private constructor() : IMEX()
 
     override fun export(vararg dbs: Database)
     {
-        TODO("Not implemented yet")
+        TODO("Not implemented.")
     }
 
     class Model : ItemViewModel<LastPassIMEX>(LastPassIMEX())
