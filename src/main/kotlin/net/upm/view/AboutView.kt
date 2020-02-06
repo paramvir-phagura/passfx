@@ -4,7 +4,9 @@ import javafx.geometry.Insets
 import javafx.geometry.Pos
 import javafx.scene.image.ImageView
 import javafx.scene.text.Font
+import net.upm.util.GITHUB_URL
 import net.upm.util.okButton
+import net.upm.util.openUrl
 import tornadofx.*
 
 class AboutView : View("About")
@@ -14,11 +16,9 @@ class AboutView : View("About")
             styleClass += "header-label"
             font = Font.font("Courier New", 36.0)
         }
-        text("A fork of the original UPM project by Adrian Smith.")
+        text("A fork of the Universal Password Manager project by Adrian Smith.")
         hbox {
-            button("", ImageView("images/github.png"))
-            button("", ImageView("images/twitter.png"))
-            button("", ImageView("images/reddit.png"))
+            button("", ImageView("images/github.png")).action { openUrl(GITHUB_URL) }
             alignment = Pos.CENTER
             spacing = 50.0
         }
