@@ -150,6 +150,11 @@ class MainViewController : Controller()
         view.databaseTabPane.selectionModel.selectedItem.close()
     }
 
+    fun rename()
+    {
+        TODO("Not implemented.")
+    }
+
     fun reloadDatabase()
     {
         TODO("Not implemented.")
@@ -213,9 +218,13 @@ class MainViewController : Controller()
         find(NewAccountWizard::class.java, scope = Scope()).apply {
             onComplete {
                 val db = view.currentDatabaseSelection!!
-                db.accounts.add(accountModel.item)
+                val account = accountModel.item
+
+                db.accounts.add(account)
                 view.accountsView.refresh()
                 refreshSearch()
+                view.accountsView.selectionModel.select(account)
+                view.accountsView.scrollTo(account)
                 logger.info("New account \"${accountModel.item.name.value}\" in database ${db.name}.")
             }
             openModal()

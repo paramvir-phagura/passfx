@@ -192,6 +192,14 @@ class MainView : View("UPM")
     fun newTab(db: Database): Tab
     {
         val tab = Tab(db.name)
+        tab.contextMenu = ContextMenu().apply {
+            item("Rename").action {
+
+            }
+            item("Close").action {
+                controller.closeTab()
+            }
+        }
         tab.database = db
 
         return tab
