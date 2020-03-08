@@ -1,6 +1,11 @@
 /.gradle
 /.idea
 /build
+/bin
+/out
+/.settings
 *.json
 *.txt
 .DS_Store
+.classpath
+.project
