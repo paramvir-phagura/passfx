@@ -93,7 +93,7 @@ class Database private constructor()
 
     fun load()
     {
-            persistence.deserialize()
+        persistence.deserialize()
     }
 
     fun save()

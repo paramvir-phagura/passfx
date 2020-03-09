@@ -122,8 +122,8 @@ class MainViewController : Controller()
                 error(e.message!!, buttons = *arrayOf(ButtonType.OK), owner = view.primaryStage)
             } catch (e: Exception)
             {
-                e.printStackTrace()
-                logger.error("Error loading database", e)
+                error("Error", "Couldn't load database.", owner=view.currentStage)
+                logger.error("Error", e)
             }
         }
     }
@@ -136,14 +136,8 @@ class MainViewController : Controller()
     @Throws(InvalidPasswordException::class, DuplicateDatabaseException::class, Exception::class)
     private fun loadDatabase(db: Database)
     {
-        try
-        {
-            db.load()
-            DatabaseManager += db
-        } catch (e: Exception)
-        {
-            error("Error", "Couldn't load database.", owner=view.currentStage)
-        }
+        db.load()
+        DatabaseManager += db
     }
 
     fun closeDatabase(db: Database = view.currentDatabaseSelection!!)
@@ -167,11 +161,6 @@ class MainViewController : Controller()
             }
         }
 
-    }
-
-    fun reloadDatabase()
-    {
-        TODO("Not implemented.")
     }
 
     fun sync()

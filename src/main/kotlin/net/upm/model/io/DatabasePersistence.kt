@@ -92,7 +92,7 @@ sealed class FileDatabasePersistence(dir: String, password: String) : DatabasePe
             throw InvalidPasswordException(e)
         }
         val stream = ByteArrayInputStream(decryptionBytes)
-        // DB info
+
         database.revision = readInt(stream)
         database.remoteLocation = readString(stream)
         database.authDBEntry = readString(stream)
