@@ -16,17 +16,17 @@ import java.nio.charset.Charset
 import java.nio.file.Files
 import java.nio.file.Paths
 
-sealed class DatabasePersistence(password: String)
+sealed class DatabasePersistence(protected var password: String)
 {
     internal lateinit var database: Database
-    var password = password
-        protected set
 
     @Throws(Exception::class)
     abstract fun deserialize()
 
     @Throws(Exception::class)
     abstract fun serialize()
+
+    abstract fun delete()
 
     @Throws(Exception::class)
     fun changePassword(password: String)
@@ -54,10 +54,14 @@ sealed class DatabasePersistence(password: String)
     }
 }
 
-sealed class FileDatabasePersistence(path: String, password: String) : DatabasePersistence(password)
+sealed class FileDatabasePersistence(dir: String, password: String) : DatabasePersistence(password)
 {
-    var path: String = path
+    val fileName
+        get() = database.name
+    var dir = dir
         protected set
+    val path
+        get() = Paths.get(dir).resolve(fileExt(fileName))
 
     @Throws(Exception::class)
     override fun deserialize()
@@ -198,6 +202,8 @@ sealed class FileDatabasePersistence(path: String, password: String) : DatabaseP
     @Throws(Exception::class)
     abstract fun save(data: ByteArray)
 
+    protected fun fileExt(fileName: String) = "$fileName.adb"
+
     companion object
     {
         const val FILE_HEADER = "UPM"
@@ -228,26 +234,31 @@ sealed class FileDatabasePersistence(path: String, password: String) : DatabaseP
 
 class LocalFileDatabasePersistence private constructor() : FileDatabasePersistence("", "")
 {
-    constructor(path: String, password: String) : this()
+    constructor(dir: String, password: String) : this()
     {
-        super.path = path
+        super.dir = dir
         super.password = password
     }
 
     @Throws(IOException::class)
-    override fun load() = Files.readAllBytes(Paths.get(path))
+    override fun load() = Files.readAllBytes(path)
 
     @Throws(IOException::class)
     override fun save(data: ByteArray)
     {
-        Files.newOutputStream(Paths.get(path)).use {
+        Files.newOutputStream(path).use {
             it.write(data)
         }
     }
 
+    override fun delete()
+    {
+        Files.deleteIfExists(Paths.get(dir).resolve(fileExt(database.previousName ?: database.name)))
+    }
+
     class Model : ItemViewModel<LocalFileDatabasePersistence>(LocalFileDatabasePersistence())
     {
-        var path = bind(LocalFileDatabasePersistence::path)
+        var dir = bind(LocalFileDatabasePersistence::dir)
         var password = bind(LocalFileDatabasePersistence::password)
     }
 }

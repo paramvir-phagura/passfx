@@ -2,27 +2,34 @@ package net.upm.model
 
 import javafx.beans.property.SimpleBooleanProperty
 import javafx.beans.property.SimpleStringProperty
+import kotlinx.coroutines.*
+import kotlinx.coroutines.channels.Channel
 import net.upm.model.io.DatabasePersistence
 import net.upm.model.io.InvalidPasswordException
 import org.slf4j.LoggerFactory
 import tornadofx.ItemViewModel
 import tornadofx.asObservable
+import java.nio.file.Files
 import java.util.*
 import java.util.concurrent.TimeUnit
+import kotlin.coroutines.CoroutineContext
 
 class Database private constructor()
 {
-    private val nameProp = SimpleStringProperty()
+    val nameProp = SimpleStringProperty()
 
     /**
      * The name of the database.
      */
     var name: String
         get() = nameProp.value
-        private set(value)
+        set(value)
         {
             nameProp.value = value
         }
+
+    internal var previousName: String? = null
+        private set
 
     /**
      * Method of persistence, e.g., on the local filesystem.
@@ -59,6 +66,18 @@ class Database private constructor()
             lockedProp.value = value
         }
 
+    var currentJob: Job? = null
+
+    init
+    {
+        nameProp.addListener { _, oldValue, _ ->
+            previousName = oldValue
+
+            if (oldValue != null)
+                rename()
+        }
+    }
+
     constructor(name: String, persistence: DatabasePersistence)
             : this()
     {
@@ -74,12 +93,30 @@ class Database private constructor()
 
     fun load()
     {
-        persistence.deserialize()
+            persistence.deserialize()
     }
 
     fun save()
     {
-        persistence.serialize()
+        GlobalScope.launch {
+            currentJob?.join()
+
+            currentJob = launch {
+                persistence.serialize()
+            }
+        }
+    }
+
+    private fun rename()
+    {
+        GlobalScope.launch {
+            currentJob?.join()
+
+            currentJob = GlobalScope.launch {
+                persistence.delete()
+                save()
+            }
+        }
     }
 
     fun incrementRevision()

@@ -10,12 +10,13 @@ import net.upm.util.maskableTextField
 import net.upm.util.okButton
 import tornadofx.*
 
-class PromptPasswordFragment() : Fragment("Password")
+class InputDialog() : Fragment("Password")
 {
     private val text: String by param()
-    private lateinit var passwordInput: TextField
+    private val mask: Boolean by param()
+    private lateinit var input: TextField
 
-    lateinit var password: String
+    lateinit var value: String
         private set
     var canceled = false
         private set
@@ -23,13 +24,13 @@ class PromptPasswordFragment() : Fragment("Password")
     override val root = vbox {
         label(text)
 
-        passwordInput = maskableTextField(keyHandler = EventHandler { e ->
+        input = maskableTextField(maskPassword = mask, withToggle = mask, keyHandler = EventHandler { e ->
             if (e.code == KeyCode.ENTER)
                 submit()
         })
         hbox {
             okButton({ submit() }) {
-                enableWhen(passwordInput.textProperty().isNotEmpty)
+                enableWhen(input.textProperty().isNotEmpty)
             }
             cancelButton { submit(cancel = true) }
             paddingTop = 5.0
@@ -39,11 +40,11 @@ class PromptPasswordFragment() : Fragment("Password")
         padding = Insets(10.0, 10.0, 15.0, 10.0)
     }
 
-    fun submit(cancel: Boolean = false)
+    private fun submit(cancel: Boolean = false)
     {
-        if (!passwordInput.text.isNullOrEmpty())
+        if (!input.text.isNullOrEmpty())
         {
-            password = passwordInput.text
+            value = input.text
         }
         canceled = cancel
         close()

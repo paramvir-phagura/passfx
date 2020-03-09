@@ -1,5 +1,7 @@
 package net.upm.view.wizard
 
+import javafx.beans.property.SimpleStringProperty
+import javafx.scene.control.Label
 import javafx.scene.layout.Priority
 import net.upm.controller.wizard.StorageInputController
 import net.upm.model.Database
@@ -46,6 +48,7 @@ class GeneralInput : View("General")
             field("Name") {
                 textfield(dbModel.name).required()
             }
+            label("e.g., Personal, Family, Work, or School")
         }
     }
 }
@@ -70,16 +73,27 @@ class StorageInput : View("Storage")
                                 val persistence = find<LocalFileDatabasePersistence.Model>()
                                 dbModel.persistenceModel = persistence
 
-                                currentStage!!.width = 465.0
-                                currentStage!!.height = 455.0
+                                currentStage!!.width = 480.0
+                                currentStage!!.height = 485.0
 
                                 field("URL") {
                                     hbox {
-                                        val urlField = textfield(persistence.path)
-                                        urlField.required()
-                                        urlField.hgrow = Priority.ALWAYS
+                                        val dirProp = SimpleStringProperty()
+                                        dirProp.bindBidirectional(persistence.dir)
 
-                                        button("Open").action { controller.chooseDir(urlField) }
+                                        val dirField = textfield()
+                                        dirField.hgrow = Priority.ALWAYS
+
+                                        button("...").action {
+                                            val file = controller.chooseDir()
+                                            if (file != null)
+                                            {
+                                                val dir = file.parentFile
+                                                dirProp.value = dir.toString()
+                                                dirField.text = file.toString()
+                                                dirField.positionCaret(dirField.text.length)
+                                            }
+                                        }
 
                                         spacing = 10.0
                                     }
@@ -88,12 +102,14 @@ class StorageInput : View("Storage")
                                     maskableTextField(persistence.password).required()
                                 }
 
-                                dbModel.persistenceModel!!.valid(persistence.path, persistence.password)
+                                dbModel.persistenceModel!!.valid(persistence.dir, persistence.password)
                                         .addListener { _, _, newValue -> isComplete = newValue }
                             }
                         }
+
+                        toggleMap.parent = this@form
+                        toggleMap.empty = Label("Select a storage method for the data.")
                     }
-                    toggleMap.parent = this@form
                 }
             }
         }
@@ -103,6 +119,6 @@ class StorageInput : View("Storage")
 class EncryptionInput : View("Encryption")
 {
     override val root = fieldset(title) {
-
+        TODO("Not implemented.")
     }
 }

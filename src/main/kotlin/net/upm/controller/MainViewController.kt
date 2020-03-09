@@ -104,7 +104,7 @@ class MainViewController : Controller()
 
     fun openDatabase(file: File)
     {
-        val filePath = file.toPath().toString()
+        val dir = file.parentFile.toPath().toString()
         val fileName = file.nameWithoutExtension
 
         if (DatabaseManager.databases.any { it.name == fileName })
@@ -114,7 +114,7 @@ class MainViewController : Controller()
             try
             {
                 promptPassword {
-                    val db = Database(fileName, LocalFileDatabasePersistence(filePath, it))
+                    val db = Database(fileName, LocalFileDatabasePersistence(dir, it))
                     loadDatabase(db)
                 }
             } catch (e: DuplicateDatabaseException)
@@ -122,6 +122,7 @@ class MainViewController : Controller()
                 error(e.message!!, buttons = *arrayOf(ButtonType.OK), owner = view.primaryStage)
             } catch (e: Exception)
             {
+                e.printStackTrace()
                 logger.error("Error loading database", e)
             }
         }
@@ -135,8 +136,14 @@ class MainViewController : Controller()
     @Throws(InvalidPasswordException::class, DuplicateDatabaseException::class, Exception::class)
     private fun loadDatabase(db: Database)
     {
-        db.load()
-        DatabaseManager += db
+        try
+        {
+            db.load()
+            DatabaseManager += db
+        } catch (e: Exception)
+        {
+            error("Error", "Couldn't load database.", owner=view.currentStage)
+        }
     }
 
     fun closeDatabase(db: Database = view.currentDatabaseSelection!!)
@@ -152,7 +159,14 @@ class MainViewController : Controller()
 
     fun rename()
     {
-        TODO("Not implemented.")
+        val db = view.currentDatabaseSelection!!
+
+        promptInput {
+            confirm("Are you sure?", "The name of this database will be changed from ${db.name} to $it.", owner = view.currentStage) {
+                db.name = it
+            }
+        }
+
     }
 
     fun reloadDatabase()
@@ -162,14 +176,14 @@ class MainViewController : Controller()
 
     fun sync()
     {
-        TODO("Not implemented.")
+        view.currentDatabaseSelection!!.save()
     }
 
     fun changePassword()
     {
         val db = view.currentDatabaseSelection!!
 
-        promptDatabasePassword(db) {
+        promptDatabasePassword(db) { // Current password
             promptPassword("Now enter a new password:") { newPassword ->
                 promptPassword("Confirm your new password:") { confirm ->
                     comparePasswords(newPassword, confirm)
@@ -341,13 +355,13 @@ class MainViewController : Controller()
     //  For opening multiple databases with the same pass without reprompt
     private fun promptPassword(text: String = "Please enter a password:", actionFn: (String) -> Unit = {})
     {
-        val prompt = find<PromptPasswordFragment>(params = mapOf("text" to text))
+        val prompt = find<InputDialog>(params = mapOf("text" to text, "mask" to true))
         prompt.openModal(StageStyle.UTILITY, block = true)
 
         try
         {
             if (!prompt.canceled)
-                actionFn(prompt.password)
+                actionFn(prompt.value)
         } catch (e: InvalidPasswordException)
         {
             invalidPasswordAlert(e)
@@ -361,6 +375,15 @@ class MainViewController : Controller()
             db.persistence.checkPassword(it)
             actionFn()
         }
+    }
+
+    private fun promptInput(text: String = "Please enter a new value", actionFn: (String) -> Unit = {})
+    {
+        val prompt = find<InputDialog>(params = mapOf("text" to text, "mask" to false))
+        prompt.openModal(StageStyle.UTILITY, block = true)
+
+        if (!prompt.canceled)
+            actionFn(prompt.value)
     }
 
     fun invalidPasswordAlert(e: InvalidPasswordException? = null)

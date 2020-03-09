@@ -5,15 +5,29 @@ import javafx.stage.Stage
 import java.awt.Desktop
 import java.io.File
 import java.net.URI
+import java.nio.file.Path
+
+val USER_HOME: String = System.getProperty("user.home")
+val USER_HOME_FILE = File(USER_HOME)
+
+/**
+ * The previously accessed directory.
+ */
+var previousDir: Path? = null
+val previousDirFile: File?
+    get() = previousDir?.toFile()
 
 fun chooseDatabase(owner: Stage): File?
 {
     val fileChooser = FileChooser()
     fileChooser.title = "Select an account database"
-    fileChooser.initialDirectory = File(USER_HOME)
+    fileChooser.initialDirectory = previousDirFile ?: USER_HOME_FILE
     fileChooser.extensionFilters.addAll(FileChooser.ExtensionFilter("Account DB", "*", "*.adb"))
 
-    return fileChooser.showOpenDialog(owner)
+    val file = fileChooser.showOpenDialog(owner)
+    previousDir = file?.parentFile?.toPath() ?: previousDir
+
+    return file
 }
 
 fun openUrl(url: String)

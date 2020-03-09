@@ -9,7 +9,7 @@ import net.upm.model.Database
 import net.upm.util.database
 import tornadofx.*
 
-class MainView : View("UPM")
+class MainView : View("PassFx")
 {
     private val controller: MainViewController by inject()
 
@@ -39,44 +39,43 @@ class MainView : View("UPM")
                 menu(messages["mainView.databaseMenu"]) {
                     item(messages["mainView.newDatabaseItem"]).action { controller.newDatabase() }
                     item(messages["mainView.openDatabaseItem"]).action { controller.openDatabase() }
-                    item(messages["mainView.openDatabaseUrlItem"]).isDisable = true
-                    item("Close Database") {
+//                    item("Export").isDisable = true
+                    item("Import").action { controller.import() }
+                    item("Close") {
                         enableWhen(databaseSelected)
                         action { controller.closeTab() }
                     }
                     separator()
-                    item("Sync").isDisable = true
+                    item("Sync") {
+                        enableWhen(databaseSelected)
+                        action { controller.sync() }
+                    }
                     item("Change Password") {
                         enableWhen(databaseSelected)
                         action { controller.changePassword() }
                     }
-                    item("Database Properties") {
+                    item("Properties") {
                         enableWhen(databaseSelected)
                         action { controller.databaseProperties() }
                     }
                     separator()
-                    item("Export").isDisable = true
-                    item("Import") {
-                        action { controller.import() }
-                    }
-                    separator()
-                    item("Quit UPM").action { controller.quit() }
+                    item("Quit App").action { controller.quit() }
                 }
 
                 menu("Account") {
-                    item("Add Account") {
+                    item("Add") {
                         enableWhen(databaseSelected)
                         action { controller.newAccount() }
                     }
-                    item("Edit Account") {
+                    item("Edit") {
                         enableWhen(accountSelected)
                         action { controller.editAccount(currentAccountSelection!!) }
                     }
-                    item("Delete Account") {
+                    item("Delete") {
                         enableWhen(accountSelected)
                         action { controller.deleteAccount(currentDatabaseSelection!!, currentAccountSelection!!) }
                     }
-                    item("View Account") {
+                    item("View") {
                         enableWhen(accountSelected)
                         action { controller.viewAccount(currentAccountSelection!!) }
                     }
@@ -95,6 +94,7 @@ class MainView : View("UPM")
                 }
 
                 menu("Help") {
+                    item("Settings").action { controller.showSettingsView() }
                     item("About").action { controller.showAboutView() }
                 }
 
@@ -135,7 +135,10 @@ class MainView : View("UPM")
                     action { controller.launchUrl() }
                 }
                 separator()
-                button("", ImageView("images/sync.png")).isDisable = true
+                button("", ImageView("images/sync.png")) {
+                    enableWhen(databaseSelected)
+                    action { controller.sync() }
+                }
                 button("", ImageView("images/settings.png")) {
                     action { controller.showSettingsView() }
                 }
@@ -191,10 +194,11 @@ class MainView : View("UPM")
 
     fun newTab(db: Database): Tab
     {
-        val tab = Tab(db.name)
+        val tab = Tab()
+        tab.textProperty().bind(db.nameProp)
         tab.contextMenu = ContextMenu().apply {
             item("Rename").action {
-
+                controller.rename()
             }
             item("Close").action {
                 controller.closeTab()

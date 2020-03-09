@@ -45,11 +45,48 @@ fun <T> ComboBox<T>.toggleMap(fn: ComboBoxToggleMap<T>.() -> Unit) = toggleMap.a
 
 class ComboBoxToggleMap<T> private constructor(combobox: ComboBox<T>)
 {
+    private val toggles = HashMap<T, () -> Node>()
+
+    lateinit var parent: Parent
+
+    var empty: Node? = null
+        set(value)
+        {
+            field = value
+
+            if (value != null)
+                        onAddNode(value, parent)
+        }
+
+    private var lastToggle: Node? = null
+
+    var onAddNode: (Node, Parent) -> Boolean = { node, parent ->
+        parent.add(node)
+        lastToggle = node
+        true
+    }
+
+    var onRemoveNode: (Parent) -> Boolean = { parent ->
+        val member = parent::class.members.stream().filter { it.name == "getChildren" }.findFirst().get()
+        val children = member.call(parent) as ObservableList<*>
+        children.remove(lastToggle)
+    }
+
+    init
+    {
+        cboxRegistry[combobox] = this
+    }
+
+    infix fun <N : () -> Node> T.toggles(createNodeFn: N)
+    {
+        toggles[this] = createNodeFn
+    }
+
     companion object
     {
         private val log = LoggerFactory.getLogger(this::class.java)
+
         internal val cboxRegistry = FXCollections.observableHashMap<ComboBox<*>, ComboBoxToggleMap<*>>()
-        val empty: Node = Label("Nothing here")
 
         init
         {
@@ -76,44 +113,19 @@ class ComboBoxToggleMap<T> private constructor(combobox: ComboBox<T>)
         @Suppress("UNCHECKED_CAST")
         fun <T> getFor(cbox: ComboBox<T>) = (cboxRegistry[cbox] ?: ComboBoxToggleMap(cbox)) as ComboBoxToggleMap<T>
     }
-
-    private val toggles = HashMap<T, () -> Node>()
-    var parent: Parent? = null
-    private var lastToggle: Node? = null
-
-    var onAddNode: (Node, Parent) -> Boolean = { node, parent ->
-        parent.add(node)
-        lastToggle = node
-        true
-    }
-
-    var onRemoveNode: (Parent) -> Boolean = { parent ->
-        val member = parent::class.members.stream().filter { it.name == "getChildren" }.findFirst().get()
-        val children = member.call(parent) as ObservableList<*>
-        children.remove(lastToggle)
-    }
-
-    init
-    {
-        cboxRegistry[combobox] = this
-    }
-
-    infix fun <N : () -> Node> T.toggles(createNodeFn: N)
-    {
-        toggles[this] = createNodeFn
-    }
 }
 
-fun EventTarget.maskableTextField(value: ObservableValue<String>? = null,
+fun EventTarget.maskableTextField(initialValue: ObservableValue<String>? = null,
                                   maskPassword: Boolean = UserConfiguration.INSTANCE.hidePassword.value,
+                                  withToggle: Boolean = true,
                                   keyHandler: EventHandler<KeyEvent>? = null,
                                   op: TextField.() -> Unit = {}): TextField
 {
     val unmaskedField = TextField()
     val maskedField = PasswordField()
     val hidePassword = SimpleBooleanProperty(maskPassword)
-    if (value != null)
-        unmaskedField.bind(value)
+    if (initialValue != null)
+        unmaskedField.bind(initialValue)
 
     vbox {
         stackpane {
@@ -128,23 +140,24 @@ fun EventTarget.maskableTextField(value: ObservableValue<String>? = null,
                 maskedField.onKeyPressed = keyHandler
             }
         }
-        checkbox("Hide Password") {
-            isSelected = hidePassword.value
-            disableProperty().bind(unmaskedField.disableProperty())
-            action {
-                hidePassword.value = hidePassword.not().value
-                if (hidePassword.value)
-                {
-                    maskedField.requestFocus()
-                    maskedField.positionCaret(maskedField.text.length)
-                } else
-                {
-                    unmaskedField.requestFocus()
-                    if (!unmaskedField.text.isNullOrEmpty())
-                        unmaskedField.positionCaret(unmaskedField.text.length)
+        if (withToggle)
+            checkbox("Hide Password") {
+                isSelected = hidePassword.value
+                disableProperty().bind(unmaskedField.disableProperty())
+                action {
+                    hidePassword.value = hidePassword.not().value
+                    if (hidePassword.value)
+                    {
+                        maskedField.requestFocus()
+                        maskedField.positionCaret(maskedField.text.length)
+                    } else
+                    {
+                        unmaskedField.requestFocus()
+                        if (!unmaskedField.text.isNullOrEmpty())
+                            unmaskedField.positionCaret(unmaskedField.text.length)
+                    }
                 }
             }
-        }
     }
     return unmaskedField
 }
