@@ -3,6 +3,7 @@ package net.upm.view
 import javafx.beans.property.SimpleBooleanProperty
 import javafx.scene.control.*
 import javafx.scene.image.ImageView
+import javafx.scene.layout.Priority
 import net.upm.controller.MainViewController
 import net.upm.model.Account
 import net.upm.model.Database
@@ -16,6 +17,7 @@ class MainView : View("PassFx")
     val databaseTabPane = TabPane()
     val accountsView = ListView<Account>()
     val searchField = TextField()
+    val sortBox = ComboBox<AccountSort>()
     val statusLabel = Label("Get started by creating or opening a database")
 
     val currentDatabaseSelection
@@ -157,6 +159,14 @@ class MainView : View("PassFx")
                     enableWhen(searchField.textProperty().isNotEmpty)
                     action { controller.clearSearch() }
                 }
+                pane {
+                    hgrow = Priority.ALWAYS
+                }
+                imageview("images/sort.png")
+                sortBox.items = AccountSort.values().asList().asObservable()
+                sortBox.selectionModel.selectFirst()
+                sortBox.valueProperty().addListener { _, _, _ -> controller.sort(sortBox.value.comparator) }
+                add(sortBox)
             }
 
             add(databaseTabPane)

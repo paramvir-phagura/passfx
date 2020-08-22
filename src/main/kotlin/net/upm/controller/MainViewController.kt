@@ -15,7 +15,6 @@ import net.upm.model.io.LocalFileDatabasePersistence
 import net.upm.util.Clipboard
 import net.upm.util.chooseDatabase
 import net.upm.util.config.UserConfiguration
-import net.upm.util.database
 import net.upm.util.openUrl
 import net.upm.view.*
 import net.upm.view.wizard.ImportWizard
@@ -27,6 +26,9 @@ import java.io.File
 import java.nio.file.Files
 import java.nio.file.Paths
 
+/**
+ * Controller for [MainView].
+ */
 class MainViewController : Controller()
 {
     private val view: MainView by inject()
@@ -57,8 +59,7 @@ class MainViewController : Controller()
 
         view.databaseTabPane.selectionModel.selectedItemProperty().addListener { _, _, newTab ->
             if (newTab != null)
-
-                view.accountsView.items = newTab.database.accounts
+                sort()
             else
                 view.accountsView.items = emptyAccountsList
             refreshStatusLabel()
@@ -86,6 +87,9 @@ class MainViewController : Controller()
         }
     }
 
+    /**
+     * Open [NewDatabaseWizard] for database creation.
+     */
     fun newDatabase()
     {
         find(NewDatabaseWizard::class.java, scope = Scope()).apply {
@@ -104,7 +108,7 @@ class MainViewController : Controller()
 
     fun openDatabase(file: File)
     {
-        val dir = file.parentFile.toPath().toString()
+        val dir = file.toPath().parent.toString()
         val fileName = file.nameWithoutExtension
 
         if (DatabaseManager.databases.any { it.name == fileName })
@@ -122,8 +126,8 @@ class MainViewController : Controller()
                 error(e.message!!, buttons = *arrayOf(ButtonType.OK), owner = view.primaryStage)
             } catch (e: Exception)
             {
+                logger.error("Error loading database", e)
                 error("Error", "Couldn't load database.", owner=view.currentStage)
-                logger.error("Error", e)
             }
         }
     }
@@ -160,7 +164,11 @@ class MainViewController : Controller()
                 db.name = it
             }
         }
+    }
 
+    fun reloadDatabase()
+    {
+        TODO("Not implemented.")
     }
 
     fun sync()
@@ -168,6 +176,9 @@ class MainViewController : Controller()
         view.currentDatabaseSelection!!.save()
     }
 
+    /**
+     * Prompt the user for a new password for the selected [Database].
+     */
     fun changePassword()
     {
         val db = view.currentDatabaseSelection!!
@@ -185,6 +196,9 @@ class MainViewController : Controller()
         }
     }
 
+    /**
+     * Open [DatabasePropertiesView] to view a [Database]s properties.
+     */
     fun databaseProperties()
     {
         val db = view.currentDatabaseSelection!!
@@ -197,6 +211,9 @@ class MainViewController : Controller()
         TODO("Not implemented.")
     }
 
+    /**
+     * Open [ImportWizard] for importing data from another password manager.
+     */
     fun import()
     {
         find(ImportWizard::class.java, scope = Scope()).apply {
@@ -208,11 +225,17 @@ class MainViewController : Controller()
         }
     }
 
+    /**
+     * Quit the application.
+     */
     fun quit()
     {
         Platform.exit()
     }
 
+    /**
+     * Open [NewAccountWizard] for account creation.
+     */
     fun newAccount()
     {
         if (!checkLock(view.currentDatabaseSelection!!))
@@ -223,17 +246,20 @@ class MainViewController : Controller()
                 val db = view.currentDatabaseSelection!!
                 val account = accountModel.item
 
-                db.accounts.add(account)
-                view.accountsView.refresh()
-                refreshSearch()
+                db.accounts += account
                 view.accountsView.selectionModel.select(account)
                 view.accountsView.scrollTo(account)
+                refreshSearch()
+                sort()
                 logger.info("New account \"${accountModel.item.name.value}\" in database ${db.name}.")
             }
             openModal()
         }
     }
 
+    /**
+     * View an [Account]s details.
+     */
     fun viewAccount(account: Account, editable: Boolean = false)
     {
         if (!checkLock(view.currentDatabaseSelection!!))
@@ -250,8 +276,14 @@ class MainViewController : Controller()
         }
     }
 
+    /**
+     * Edit an [Account]s details from the provided [Database].
+     */
     fun editAccount(account: Account) = viewAccount(account, true)
 
+    /**
+     * Delete an [Account] from the provided [Database].
+     */
     fun deleteAccount(database: Database, account: Account)
     {
         if (!checkLock(view.currentDatabaseSelection!!))
@@ -268,6 +300,9 @@ class MainViewController : Controller()
             view.accountsView.selectionModel.select(0)
     }
 
+    /**
+     * Copy the [Account]s username to the system clipboard.
+     */
     fun copyUsername(account: Account)
     {
         if (!checkLock(view.currentDatabaseSelection!!))
@@ -276,6 +311,9 @@ class MainViewController : Controller()
         Clipboard.copy(account.username.value)
     }
 
+    /**
+     * Copy the [Account]s password to the system clipboard.
+     */
     fun copyPassword(account: Account)
     {
         if (!checkLock(view.currentDatabaseSelection!!))
@@ -284,49 +322,90 @@ class MainViewController : Controller()
         Clipboard.copy(account.password.value)
     }
 
+    /**
+     * Launch the [Account]s URL in the default system browser.
+     */
     fun launchUrl()
     {
         openUrl(view.currentAccountSelection!!.url.value)
     }
 
+    /**
+     * Filter the accounts view items based on the provided predicate.
+     */
     fun filter(db: Database, filter: (acc: Account) -> Boolean): ObservableList<Account>
     {
         return db.accounts.filter(filter).asObservable()
     }
 
+    /**
+     * Filter the accounts view items based on the provided search entry.
+     */
     fun search(query: String)
     {
         val queryMod = query.trim().toLowerCase()
         view.accountsView.items =
                 filter(view.currentDatabaseSelection!!) { acc -> acc.name.value.toLowerCase().contains(queryMod) }
+                        .sorted(view.sortBox.value.comparator)
     }
 
+    /**
+     * Re-search the current search query after a change in the accounts list.
+     */
     fun refreshSearch()
     {
-        search (view.searchField.text)
+        search(view.searchField.text)
     }
 
+    /**
+     * Clear the search field and entry.
+     */
     fun clearSearch()
     {
         view.searchField.clear()
         view.accountsView.selectionModel.clearSelection()
     }
 
-    fun sort()
+    /**
+     * Sort the accounts view items based on the provided comparator.
+     * This does not affect the backing list in [Database].
+     */
+    fun sort(comparator: Comparator<Account>)
     {
-        TODO("Not implemented.")
+        clearSearch()
+        view.accountsView.items = view.currentDatabaseSelection!!.accounts.sorted(comparator)
     }
 
+    /**
+     * Sort the accounts view items based on the user selected comparator.
+     * This does not affect the backing list in [Database].
+     */
+    fun sort()
+    {
+        sort(view.sortBox.value.comparator)
+    }
+
+    /**
+     * Open the [SettingsView].
+     */
     fun showSettingsView()
     {
         find<SettingsView>(Scope()).openModal()
     }
 
+    /**
+     * Open the [AboutView].
+     */
     fun showAboutView()
     {
         find<AboutView>().openModal()
     }
 
+    /**
+     * Check if the provided [Database] is locked.
+     * If it is, prompt the user, prompt the user for its password.
+     * Otherwise allow access.
+     */
     fun checkLock(db: Database): Boolean
     {
         if (db.locked)
