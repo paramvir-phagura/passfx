@@ -8,7 +8,6 @@ import net.upm.model.DatabaseManager
 import net.upm.util.config.UserConfiguration
 import net.upm.view.MainView
 import org.slf4j.LoggerFactory
-import sun.misc.Unsafe
 import tornadofx.App
 import tornadofx.importStylesheet
 
@@ -43,22 +42,6 @@ class UPM : App(MainView::class)
     companion object
     {
         private val log = LoggerFactory.getLogger(UPM::class.java)
-
-        init
-        {
-            // Disable reflective access warnings
-            try {
-                val theUnsafe = Unsafe::class.java.getDeclaredField("theUnsafe");
-                theUnsafe.isAccessible = true
-                val u = theUnsafe.get(null) as Unsafe
-
-                val cls = Class.forName("jdk.internal.module.IllegalAccessLogger");
-                val logger = cls.getDeclaredField("logger");
-                u.putObjectVolatile(cls, u.staticFieldOffset(logger), null);
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
-        }
     }
 }
 
