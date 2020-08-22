@@ -1,7 +1,6 @@
 package net.upm.view.wizard
 
 import javafx.beans.property.SimpleStringProperty
-import javafx.scene.control.Label
 import javafx.scene.layout.Priority
 import net.upm.controller.wizard.StorageInputController
 import net.upm.model.Database
@@ -84,7 +83,7 @@ class StorageInput : View("Storage")
                                         val dirField = textfield()
                                         dirField.hgrow = Priority.ALWAYS
 
-                                        button("...").action {
+                                        button("Open").action {
                                             val file = controller.chooseDir()
                                             if (file != null)
                                             {
@@ -106,10 +105,8 @@ class StorageInput : View("Storage")
                                         .addListener { _, _, newValue -> isComplete = newValue }
                             }
                         }
-
-                        toggleMap.parent = this@form
-                        toggleMap.empty = Label("Select a storage method for the data.")
                     }
+                    toggleMap.parent = this@form
                 }
             }
         }

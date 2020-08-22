@@ -38,7 +38,7 @@ class SettingsView : View("Settings")
                     }
                 }
                 row {
-                    label("Database to load on startup (local):")
+                    label("Database to load on startup:")
                 }
                 row {
                     textfield(model.initialDatabase) {

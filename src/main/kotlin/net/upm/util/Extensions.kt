@@ -46,18 +46,7 @@ fun <T> ComboBox<T>.toggleMap(fn: ComboBoxToggleMap<T>.() -> Unit) = toggleMap.a
 class ComboBoxToggleMap<T> private constructor(combobox: ComboBox<T>)
 {
     private val toggles = HashMap<T, () -> Node>()
-
-    lateinit var parent: Parent
-
-    var empty: Node? = null
-        set(value)
-        {
-            field = value
-
-            if (value != null)
-                        onAddNode(value, parent)
-        }
-
+    var parent: Parent? = null
     private var lastToggle: Node? = null
 
     var onAddNode: (Node, Parent) -> Boolean = { node, parent ->
@@ -85,7 +74,6 @@ class ComboBoxToggleMap<T> private constructor(combobox: ComboBox<T>)
     companion object
     {
         private val log = LoggerFactory.getLogger(this::class.java)
-
         internal val cboxRegistry = FXCollections.observableHashMap<ComboBox<*>, ComboBoxToggleMap<*>>()
 
         init

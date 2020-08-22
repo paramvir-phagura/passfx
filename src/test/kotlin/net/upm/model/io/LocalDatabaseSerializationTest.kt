@@ -30,9 +30,9 @@ class LocalDatabaseSerializationTest
 
     fun createDatabase(): Database
     {
-        val url = "/Users/pavanphagura/Desktop/Password Database"
+        val dir = "/Users/pavanphagura/Desktop"
         val password = "test"
-        val persistence = LocalFileDatabasePersistence(url, password)
+        val persistence = LocalFileDatabasePersistence(dir, password)
         val db = Database("TestDB", persistence)
 
         return db
