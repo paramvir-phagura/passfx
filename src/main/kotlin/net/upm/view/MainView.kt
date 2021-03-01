@@ -91,7 +91,7 @@ class MainView : View("PassFx")
                     }
                     item("Launch URL") {
                         enableWhen(openableUrl)
-                        action { controller.launchUrl() }
+                        action { controller.launchUrl(currentAccountSelection!!) }
                     }
                 }
 
@@ -134,7 +134,7 @@ class MainView : View("PassFx")
                 }
                 button("", ImageView("images/open-url.png")) {
                     enableWhen(openableUrl)
-                    action { controller.launchUrl() }
+                    action { controller.launchUrl(currentAccountSelection!!) }
                 }
                 separator()
                 button("", ImageView("images/sync.png")) {
