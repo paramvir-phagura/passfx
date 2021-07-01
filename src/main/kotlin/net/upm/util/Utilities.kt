@@ -16,9 +16,8 @@ val initialDatabaseDirectory =
     if (UserConfiguration.INSTANCE.initialDatabase.value.isEmpty())
         null
     else
-        Paths.get(
-            UserConfiguration.INSTANCE.initialDatabase.value.substring(0,
-                UserConfiguration.INSTANCE.initialDatabase.value.lastIndexOf("\\")))
+        Paths.get(UserConfiguration.INSTANCE.initialDatabase.value.substring(0,
+            UserConfiguration.INSTANCE.initialDatabase.value.lastIndexOf("\\")))
 
 /**
  * The previously accessed directory.

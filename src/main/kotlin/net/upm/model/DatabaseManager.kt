@@ -15,11 +15,11 @@ object DatabaseManager {
         databases.addListener { change: ListChangeListener.Change<out Database> ->
             change.next()
             if (change.wasAdded()) {
-                log.info("Database ${change.addedSubList.first().name} added.")
+                log.info("Database \"${change.addedSubList.first().name}\" added.")
             } else if (change.wasRemoved()) {
                 val db = change.removed.first()
                 db.save()
-                log.info("Database ${db.name} removed.")
+                log.info("Database \"${db.name}\" removed.")
             }
         }
 
@@ -35,7 +35,7 @@ object DatabaseManager {
     @Throws(DuplicateDatabaseException::class)
     fun check(database: Database) {
         if (databases.contains(database))
-            throw DuplicateDatabaseException("Database already exists")
+            throw DuplicateDatabaseException("Database \"${database.name}\" already exists")
     }
 
     fun saveAll() {

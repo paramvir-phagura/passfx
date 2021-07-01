@@ -58,9 +58,6 @@ class LastPassIMEX private constructor() : IMEX() {
                 lineSplitIndex = valueIndex
                 println(valueIndex)
             }
-
-            val line = remaining.substring(0, lineSplitIndex)
-//            println("line $line")
             remaining = remaining.substring(lineSplitIndex)
         }
 

@@ -96,7 +96,7 @@ class MainViewController : Controller() {
         val fileName = file.nameWithoutExtension
 
         if (DatabaseManager.databases.any { it.name == fileName })
-            error("Database already loaded!", buttons = *arrayOf(ButtonType.OK), owner = view.primaryStage)
+            error("Database already loaded!", buttons = arrayOf(ButtonType.OK), owner = view.primaryStage)
         else {
             try {
                 promptPassword {
@@ -104,7 +104,7 @@ class MainViewController : Controller() {
                     loadDatabase(db)
                 }
             } catch (e: DuplicateDatabaseException) {
-                error(e.message!!, buttons = *arrayOf(ButtonType.OK), owner = view.primaryStage)
+                error(e.message!!, buttons = arrayOf(ButtonType.OK), owner = view.primaryStage)
             } catch (e: Exception) {
                 logger.error("Error loading database", e)
                 error("Error", "Couldn't load database.", owner = view.currentStage)
@@ -235,7 +235,7 @@ class MainViewController : Controller() {
 
     /** Display an error alert regarding an invalid password input. */
     fun invalidPasswordAlert(e: InvalidPasswordException? = null) {
-        error(e?.message ?: "Invalid password!", buttons = *arrayOf(ButtonType.OK), owner = view.primaryStage)
+        error(e?.message ?: "Invalid password!", buttons = arrayOf(ButtonType.OK), owner = view.primaryStage)
     }
 
     /** Compares the args and throws an [InvalidPasswordException] if they aren't equal. */
@@ -376,9 +376,9 @@ class MainViewController : Controller() {
 
     /** Filter the accounts view items based on the provided search entry. */
     fun search(query: String) {
-        val queryMod = query.trim().toLowerCase()
+        val queryMod = query.trim().lowercase()
         view.accountsView.items =
-            filter(view.currentDatabaseSelection!!) { acc -> acc.name.value.toLowerCase().contains(queryMod) }
+            filter(view.currentDatabaseSelection!!) { acc -> acc.name.value.lowercase().contains(queryMod) }
                 .sorted(view.sortBox.value.comparator)
     }
 
