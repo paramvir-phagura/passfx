@@ -1,11 +1,13 @@
 /.gradle
 /.idea
+/.settings
+
 /build
 /bin
 /out
-/.settings
-*.json
-*.txt
 .DS_Store
 .classpath
 .project
+
+*.json
+*.txt
