@@ -16,8 +16,7 @@ import java.nio.charset.Charset
 import java.nio.file.Files
 import java.nio.file.Paths
 
-sealed class DatabasePersistence(protected var password: String)
-{
+sealed class DatabasePersistence(protected var password: String) {
     internal lateinit var database: Database
 
     @Throws(Exception::class)
@@ -29,33 +28,27 @@ sealed class DatabasePersistence(protected var password: String)
     abstract fun delete()
 
     @Throws(Exception::class)
-    fun changePassword(password: String)
-    {
+    fun changePassword(password: String) {
         this.password = password
         serialize()
     }
 
     @Throws(InvalidPasswordException::class)
-    fun checkPassword(input: String)
-    {
+    fun checkPassword(input: String) {
         if (input != password)
             throw InvalidPasswordException()
     }
 
-    inline fun checkPassword(input: String, failureFn: (InvalidPasswordException) -> Unit)
-    {
-        try
-        {
+    inline fun checkPassword(input: String, failureFn: (InvalidPasswordException) -> Unit) {
+        try {
             checkPassword(input)
-        } catch(e: InvalidPasswordException)
-        {
+        } catch (e: InvalidPasswordException) {
             failureFn(e)
         }
     }
 }
 
-sealed class FileDatabasePersistence(dir: String, password: String) : DatabasePersistence(password)
-{
+sealed class FileDatabasePersistence(dir: String, password: String) : DatabasePersistence(password) {
     val fileName
         get() = database.name
     var dir = dir
@@ -64,8 +57,7 @@ sealed class FileDatabasePersistence(dir: String, password: String) : DatabasePe
         get() = Paths.get(dir).resolve(fileExt(fileName))
 
     @Throws(Exception::class)
-    override fun deserialize()
-    {
+    override fun deserialize() {
         val startTime = System.currentTimeMillis()
         val data = load()
 //        log.debug("FILE LENGTH READ: ${data.size}")
@@ -84,11 +76,9 @@ sealed class FileDatabasePersistence(dir: String, password: String) : DatabasePe
         val password = password.toCharArray()
         val encryption = EncryptionService(password, salt)
         lateinit var decryptionBytes: ByteArray
-        try
-        {
+        try {
             decryptionBytes = encryption.decrypt(encryptedBytes)
-        } catch (e: Exception)
-        {
+        } catch (e: Exception) {
             throw InvalidPasswordException(e)
         }
         val stream = ByteArrayInputStream(decryptionBytes)
@@ -97,10 +87,8 @@ sealed class FileDatabasePersistence(dir: String, password: String) : DatabasePe
         database.remoteLocation = readString(stream)
         database.authDBEntry = readString(stream)
 
-        while (true)
-        {
-            try
-            {
+        while (true) {
+            try {
                 val name = readString(stream)
                 val username = readString(stream)
                 val pass = readString(stream)
@@ -109,8 +97,7 @@ sealed class FileDatabasePersistence(dir: String, password: String) : DatabasePe
                 log.debug("$name, $username, $pass, $url, $notes")
                 val account = Account(name, username, pass, url, notes)
                 database += account
-            } catch (e: Exception)
-            {
+            } catch (e: Exception) {
                 break
             }
         }
@@ -121,34 +108,29 @@ sealed class FileDatabasePersistence(dir: String, password: String) : DatabasePe
     @Throws(Exception::class)
     abstract fun load(): ByteArray
 
-    private fun verifyFileData(data: ByteArray): Boolean
-    {
+    private fun verifyFileData(data: ByteArray): Boolean {
         // Verify file size
-        if (data.size < EncryptionService.SALT_LENGTH)
-        {
+        if (data.size < EncryptionService.SALT_LENGTH) {
             return false
         }
 
         // Verify file header
         val header = ByteArray(FILE_HEADER.length)
         System.arraycopy(data, 0, header, 0, header.size)
-        if (String(header) != FILE_HEADER)
-        {
+        if (String(header) != FILE_HEADER) {
             return false
         }
 
         // Verify db version TODO Throw exception for legacy version
         val version = header.size
-        if (version != DATABASE_VERSION)
-        {
+        if (version != DATABASE_VERSION) {
             return false
         }
 
         return true // If all verification tests have passed
     }
 
-    private fun readString(stream: ByteArrayInputStream): String
-    {
+    private fun readString(stream: ByteArrayInputStream): String {
         val fieldLengthData = ByteArray(LENGTH_FIELD_NUM_CHARS)
         val bytesRead = stream.read(fieldLengthData)
         if (bytesRead == -1 || bytesRead != LENGTH_FIELD_NUM_CHARS)
@@ -168,8 +150,7 @@ sealed class FileDatabasePersistence(dir: String, password: String) : DatabasePe
     private fun readInt(stream: ByteArrayInputStream) = readString(stream).toInt()
 
     @Throws(Exception::class)
-    override fun serialize()
-    {
+    override fun serialize() {
         val encryption = EncryptionService(password.toCharArray())
         save(ByteArrayOutputStream().use { out ->
             val data = ByteArrayOutputStream().use { dataOut ->
@@ -177,8 +158,7 @@ sealed class FileDatabasePersistence(dir: String, password: String) : DatabasePe
                 dataOut.write(flatPack(database.revision.toString()))
                 dataOut.write(flatPack(database.remoteLocation))
                 dataOut.write(flatPack(database.authDBEntry))
-                for (account in database.accounts)
-                {
+                for (account in database.accounts) {
                     dataOut.write(flatPack(account.name.value))
                     dataOut.write(flatPack(account.username.value))
                     dataOut.write(flatPack(account.password.value))
@@ -204,8 +184,7 @@ sealed class FileDatabasePersistence(dir: String, password: String) : DatabasePe
 
     protected fun fileExt(fileName: String) = "$fileName.adb"
 
-    companion object
-    {
+    companion object {
         const val FILE_HEADER = "UPM"
         const val DATABASE_VERSION = 3
         const val LENGTH_FIELD_NUM_CHARS = 4
@@ -213,8 +192,7 @@ sealed class FileDatabasePersistence(dir: String, password: String) : DatabasePe
         private val log = LoggerFactory.getLogger(this::class.java)
         private val charset = Charset.forName("UTF-8")
 
-        fun flatPack(bytes: ByteArray): ByteArray
-        {
+        fun flatPack(bytes: ByteArray): ByteArray {
             val length = Utilities.lpad(bytes.size, LENGTH_FIELD_NUM_CHARS, '0')
             val lengthBytes = length.toByteArray(charset)
             val returnBuffer = ByteArray(lengthBytes.size + bytes.size)
@@ -224,18 +202,15 @@ sealed class FileDatabasePersistence(dir: String, password: String) : DatabasePe
             return returnBuffer
         }
 
-        fun flatPack(value: String?): ByteArray
-        {
+        fun flatPack(value: String?): ByteArray {
             val value = value ?: ""
             return flatPack(value.toByteArray(charset))
         }
     }
 }
 
-class LocalFileDatabasePersistence private constructor() : FileDatabasePersistence("", "")
-{
-    constructor(dir: String, password: String) : this()
-    {
+class LocalFileDatabasePersistence private constructor() : FileDatabasePersistence("", "") {
+    constructor(dir: String, password: String) : this() {
         super.dir = dir
         super.password = password
     }
@@ -244,20 +219,17 @@ class LocalFileDatabasePersistence private constructor() : FileDatabasePersisten
     override fun load() = Files.readAllBytes(path)
 
     @Throws(IOException::class)
-    override fun save(data: ByteArray)
-    {
+    override fun save(data: ByteArray) {
         Files.newOutputStream(path).use {
             it.write(data)
         }
     }
 
-    override fun delete()
-    {
+    override fun delete() {
         Files.deleteIfExists(Paths.get(dir).resolve(fileExt(database.previousName ?: database.name)))
     }
 
-    class Model : ItemViewModel<LocalFileDatabasePersistence>(LocalFileDatabasePersistence())
-    {
+    class Model : ItemViewModel<LocalFileDatabasePersistence>(LocalFileDatabasePersistence()) {
         var dir = bind(LocalFileDatabasePersistence::dir)
         var password = bind(LocalFileDatabasePersistence::password)
     }

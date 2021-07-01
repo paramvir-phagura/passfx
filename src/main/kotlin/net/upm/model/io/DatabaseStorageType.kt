@@ -2,10 +2,8 @@ package net.upm.model.io
 
 import kotlin.reflect.KClass
 
-enum class DatabaseStorageType
-{
-    LOCAL
-    {
+enum class DatabaseStorageType {
+    LOCAL {
         override val persistence = LocalFileDatabasePersistence::class
         override val desc = "Local Database"
     };
@@ -22,8 +20,7 @@ enum class DatabaseStorageType
 
     override fun toString() = desc
 
-    companion object
-    {
+    companion object {
         fun getFor(method: KClass<out DatabasePersistence>) =
             values().filter { it.persistence == method }.firstOrNull()
     }

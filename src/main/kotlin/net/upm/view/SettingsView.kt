@@ -12,8 +12,7 @@ import net.upm.util.maskableTextField
 import net.upm.util.okButton
 import tornadofx.*
 
-class SettingsView : View("Settings")
-{
+class SettingsView : View("Settings") {
     private val controller: SettingsViewController by inject()
     private val model: UserConfiguration.Model by inject()
 
@@ -185,8 +184,7 @@ class SettingsView : View("Settings")
         }
     }
 
-    override fun onBeforeShow()
-    {
+    override fun onBeforeShow() {
         controller()
         currentStage!!.maxWidth = 375.0
         settings.expandedPane = general

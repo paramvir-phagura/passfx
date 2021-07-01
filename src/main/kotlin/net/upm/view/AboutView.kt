@@ -9,8 +9,7 @@ import net.upm.util.okButton
 import net.upm.util.openUrl
 import tornadofx.*
 
-class AboutView : View("About")
-{
+class AboutView : View("About") {
     override val root = vbox {
         text("Made with ❤ by Pavan") {
             styleClass += "header-label"
@@ -28,8 +27,7 @@ class AboutView : View("About")
         spacing = 15.0
     }
 
-    override fun onBeforeShow()
-    {
+    override fun onBeforeShow() {
         currentStage!!.isResizable = false
         root.requestFocus()
     }

@@ -28,6 +28,7 @@ import java.nio.file.Paths
 
 /** Controller for [MainView]. */
 class MainViewController : Controller() {
+
     private val view: MainView by inject()
 
     private val emptyAccountsList = emptyList<Account>().asObservable()

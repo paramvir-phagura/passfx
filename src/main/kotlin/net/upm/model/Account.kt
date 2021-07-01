@@ -3,8 +3,7 @@ package net.upm.model
 import javafx.beans.property.SimpleStringProperty
 import tornadofx.ItemViewModel
 
-class Account private constructor()
-{
+class Account private constructor() {
     val name = SimpleStringProperty()
     val username = SimpleStringProperty()
     val password = SimpleStringProperty()
@@ -17,12 +16,13 @@ class Account private constructor()
             return url.isNotEmpty.value
         }
 
-    constructor(name: String = "Unnamed account",
-                username: String,
-                password: String,
-                url: String,
-                notes: String) : this()
-    {
+    constructor(
+        name: String = "Unnamed account",
+        username: String,
+        password: String,
+        url: String,
+        notes: String
+    ) : this() {
         this.name.value = name
         this.username.value = username
         this.password.value = password
@@ -32,8 +32,7 @@ class Account private constructor()
 
     override fun toString() = name.value
 
-    class Model(account: Account = Account()) : ItemViewModel<Account>(account)
-    {
+    class Model(account: Account = Account()) : ItemViewModel<Account>(account) {
         val name = bind(Account::name)
         val username = bind(Account::username)
         val password = bind(Account::password)

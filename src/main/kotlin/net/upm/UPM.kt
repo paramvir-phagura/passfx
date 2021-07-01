@@ -7,19 +7,16 @@ import net.upm.model.Database
 import net.upm.model.DatabaseManager
 import net.upm.util.config.UserConfiguration
 import net.upm.view.MainView
+import org.slf4j.LoggerFactory
 import tornadofx.App
 import tornadofx.importStylesheet
-import org.slf4j.LoggerFactory
 
-class UPM : App(MainView::class)
-{
-    init
-    {
+class UPM : App(MainView::class) {
+    init {
         importStylesheet(UserConfiguration.INSTANCE.theme.value)
     }
 
-    override fun start(stage: Stage)
-    {
+    override fun start(stage: Stage) {
         stage.width = 465.0
         stage.height = 500.0
         stage.icons.addAll(Image("images/icon.png"))
@@ -31,16 +28,14 @@ class UPM : App(MainView::class)
         super.start(stage)
     }
 
-    override fun stop()
-    {
+    override fun stop() {
         Database.closeTimer()
         DatabaseManager.saveAll()
         UserConfiguration.INSTANCE.save()
         super.stop()
     }
 
-    companion object
-    {
+    companion object {
         private val log = LoggerFactory.getLogger(UPM::class.java)
     }
 }

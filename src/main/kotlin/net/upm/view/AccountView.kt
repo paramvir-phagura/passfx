@@ -16,8 +16,7 @@ import net.upm.util.maskableTextField
 import net.upm.util.okButton
 import tornadofx.*
 
-class AccountView : View()
-{
+class AccountView : View() {
     private val controller: AccountViewController by inject()
     private val account: Account by param()
     private val accountModel = Account.Model(account)
@@ -76,24 +75,20 @@ class AccountView : View()
 //        padding = Insets(10.0, 10.0, 0.0, 10.0)
     }
 
-    init
-    {
+    init {
         title = account.name.value
     }
 
-    override fun onDock()
-    {
+    override fun onDock() {
         // Remove focus from the first textfield
         root.requestFocus()
     }
 
-    fun commit(): Boolean
-    {
+    fun commit(): Boolean {
         return accountModel.commit()
     }
 
-    fun EventTarget.copyButton(input: TextInputControl): Button
-    {
+    fun EventTarget.copyButton(input: TextInputControl): Button {
         val copyButton = Button("", ImageView("images/copy-icon.png")).attachTo(this)
         copyButton.action {
             controller.copyFrom(input)
@@ -102,10 +97,10 @@ class AccountView : View()
     }
 
     fun EventTarget.pasteButton(input: TextInputControl) =
-            Button("", ImageView("images/paste-icon.png")).attachTo(this).apply {
-                disableProperty().value = !editable
-                action {
-                    controller.pasteTo(input)
-                }
+        Button("", ImageView("images/paste-icon.png")).attachTo(this).apply {
+            disableProperty().value = !editable
+            action {
+                controller.pasteTo(input)
             }
+        }
 }

@@ -10,8 +10,7 @@ import net.upm.util.maskableTextField
 import net.upm.util.okButton
 import tornadofx.*
 
-class InputDialog() : Fragment("Password")
-{
+class InputDialog() : Fragment("Password") {
     private val text: String by param()
     private val mask: Boolean by param()
     private lateinit var input: TextField
@@ -40,10 +39,8 @@ class InputDialog() : Fragment("Password")
         padding = Insets(10.0, 10.0, 15.0, 10.0)
     }
 
-    private fun submit(cancel: Boolean = false)
-    {
-        if (!input.text.isNullOrEmpty())
-        {
+    private fun submit(cancel: Boolean = false) {
+        if (!input.text.isNullOrEmpty()) {
             value = input.text
         }
         canceled = cancel

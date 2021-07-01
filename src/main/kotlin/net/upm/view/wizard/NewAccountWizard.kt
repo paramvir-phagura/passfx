@@ -7,13 +7,11 @@ import net.upm.model.Account
 import net.upm.util.maskableTextField
 import tornadofx.*
 
-class NewAccountWizard : Wizard("New Account Wizard", "Add an account containing credentials.")
-{
+class NewAccountWizard : Wizard("New Account Wizard", "Add an account containing credentials.") {
     val accountModel: Account.Model by inject()
 
     private val enterHandler = EventHandler<KeyEvent> {
-        if (it.code == KeyCode.ENTER)
-        {
+        if (it.code == KeyCode.ENTER) {
             // Why is this not a method?
             currentPage.onSave()
             if (currentPage.isComplete) {
@@ -27,19 +25,16 @@ class NewAccountWizard : Wizard("New Account Wizard", "Add an account containing
     override val canGoNext = currentPageComplete
     override val canFinish = allPagesComplete
 
-    init
-    {
+    init {
         add(BasicAccountInfoView::class, mapOf("enterHandler" to enterHandler))
     }
 
-    override fun onSave()
-    {
+    override fun onSave() {
         isComplete = accountModel.commit()
     }
 }
 
-class BasicAccountInfoView : View("Info")
-{
+class BasicAccountInfoView : View("Info") {
     private val accountModel: Account.Model by inject()
 
     private val enterHandler: EventHandler<KeyEvent> by param()

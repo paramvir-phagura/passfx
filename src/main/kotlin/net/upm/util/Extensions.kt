@@ -17,14 +17,12 @@ import org.slf4j.LoggerFactory
 import tornadofx.*
 import kotlin.reflect.KProperty
 
-object TabDatabaseProvider
-{
+object TabDatabaseProvider {
     private val dbs = mutableMapOf<Tab, Database>()
 
     operator fun getValue(tab: Tab, property: KProperty<*>) = dbs[tab]!!
 
-    operator fun setValue(tab: Tab, property: KProperty<*>, db: Database)
-    {
+    operator fun setValue(tab: Tab, property: KProperty<*>, db: Database) {
         dbs[tab] = db
     }
 }
@@ -32,19 +30,16 @@ object TabDatabaseProvider
 var Tab.database: Database by TabDatabaseProvider
 
 var <T> ComboBox<T>.toggleMap: ComboBoxToggleMap<T>
-    get()
-    {
+    get() {
         return ComboBoxToggleMap.getFor(this)
     }
-    set(newValue)
-    {
+    set(newValue) {
         ComboBoxToggleMap.cboxRegistry[this] = newValue
     }
 
 fun <T> ComboBox<T>.toggleMap(fn: ComboBoxToggleMap<T>.() -> Unit) = toggleMap.also(fn)
 
-class ComboBoxToggleMap<T> private constructor(combobox: ComboBox<T>)
-{
+class ComboBoxToggleMap<T> private constructor(combobox: ComboBox<T>) {
     private val toggles = HashMap<T, () -> Node>()
     var parent: Parent? = null
     private var lastToggle: Node? = null
@@ -61,29 +56,24 @@ class ComboBoxToggleMap<T> private constructor(combobox: ComboBox<T>)
         children.remove(lastToggle)
     }
 
-    init
-    {
+    init {
         cboxRegistry[combobox] = this
     }
 
-    infix fun <N : () -> Node> T.toggles(createNodeFn: N)
-    {
+    infix fun <N : () -> Node> T.toggles(createNodeFn: N) {
         toggles[this] = createNodeFn
     }
 
-    companion object
-    {
+    companion object {
         private val log = LoggerFactory.getLogger(this::class.java)
         internal val cboxRegistry = FXCollections.observableHashMap<ComboBox<*>, ComboBoxToggleMap<*>>()
 
-        init
-        {
+        init {
             cboxRegistry.addListener registry@{ change: MapChangeListener.Change<out ComboBox<*>, out ComboBoxToggleMap<*>> ->
                 log.debug("Added? ${change.wasAdded()} / Removed? ${change.wasRemoved()}")
                 val cbox = change.key
 
-                if (change.wasAdded())
-                {
+                if (change.wasAdded()) {
                     cbox.valueProperty().addListener combobox@{ _, oldValue, newValue ->
                         if (oldValue == newValue)
                             return@combobox
@@ -103,12 +93,13 @@ class ComboBoxToggleMap<T> private constructor(combobox: ComboBox<T>)
     }
 }
 
-fun EventTarget.maskableTextField(initialValue: ObservableValue<String>? = null,
-                                  maskPassword: Boolean = UserConfiguration.INSTANCE.hidePassword.value,
-                                  withToggle: Boolean = true,
-                                  keyHandler: EventHandler<KeyEvent>? = null,
-                                  op: TextField.() -> Unit = {}): TextField
-{
+fun EventTarget.maskableTextField(
+    initialValue: ObservableValue<String>? = null,
+    maskPassword: Boolean = UserConfiguration.INSTANCE.hidePassword.value,
+    withToggle: Boolean = true,
+    keyHandler: EventHandler<KeyEvent>? = null,
+    op: TextField.() -> Unit = {}
+): TextField {
     val unmaskedField = TextField()
     val maskedField = PasswordField()
     val hidePassword = SimpleBooleanProperty(maskPassword)
@@ -122,8 +113,7 @@ fun EventTarget.maskableTextField(initialValue: ObservableValue<String>? = null,
             maskedField.textProperty().bindBidirectional(unmaskedField.textProperty())
             maskedField.visibleProperty().bind(hidePassword)
             unmaskedField.visibleProperty().bind(hidePassword.not())
-            if (keyHandler != null)
-            {
+            if (keyHandler != null) {
                 unmaskedField.onKeyPressed = keyHandler
                 maskedField.onKeyPressed = keyHandler
             }
@@ -134,12 +124,10 @@ fun EventTarget.maskableTextField(initialValue: ObservableValue<String>? = null,
                 disableProperty().bind(unmaskedField.disableProperty())
                 action {
                     hidePassword.value = hidePassword.not().value
-                    if (hidePassword.value)
-                    {
+                    if (hidePassword.value) {
                         maskedField.requestFocus()
                         maskedField.positionCaret(maskedField.text.length)
-                    } else
-                    {
+                    } else {
                         unmaskedField.requestFocus()
                         if (!unmaskedField.text.isNullOrEmpty())
                             unmaskedField.positionCaret(unmaskedField.text.length)
@@ -151,15 +139,15 @@ fun EventTarget.maskableTextField(initialValue: ObservableValue<String>? = null,
 }
 
 fun EventTarget.okButton(action: () -> Unit, op: Button.() -> Unit) =
-        Button("Ok").attachTo(this, op).apply {
-            styleClass += "ok-button"
-            action(action)
-        }
+    Button("Ok").attachTo(this, op).apply {
+        styleClass += "ok-button"
+        action(action)
+    }
 
 fun EventTarget.okButton(op: () -> Unit) = okButton(op, {})
 
 fun EventTarget.cancelButton(op: () -> Unit) =
-        button("Cancel") {
-            prefWidth = 85.0
-            action(op)
-        }
+    button("Cancel") {
+        prefWidth = 85.0
+        action(op)
+    }

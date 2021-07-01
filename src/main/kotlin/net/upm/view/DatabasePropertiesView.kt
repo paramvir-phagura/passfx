@@ -7,8 +7,7 @@ import net.upm.model.io.DatabaseStorageType
 import net.upm.util.okButton
 import tornadofx.*
 
-class DatabasePropertiesView : Fragment()
-{
+class DatabasePropertiesView : Fragment() {
     private val database: Database by param()
 
     override val root = vbox {

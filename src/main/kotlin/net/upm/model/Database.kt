@@ -2,20 +2,18 @@ package net.upm.model
 
 import javafx.beans.property.SimpleBooleanProperty
 import javafx.beans.property.SimpleStringProperty
-import kotlinx.coroutines.*
-import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
 import net.upm.model.io.DatabasePersistence
 import net.upm.model.io.InvalidPasswordException
 import org.slf4j.LoggerFactory
 import tornadofx.ItemViewModel
 import tornadofx.asObservable
-import java.nio.file.Files
 import java.util.*
 import java.util.concurrent.TimeUnit
-import kotlin.coroutines.CoroutineContext
 
-class Database private constructor()
-{
+class Database private constructor() {
     val nameProp = SimpleStringProperty()
 
     /**
@@ -23,8 +21,7 @@ class Database private constructor()
      */
     var name: String
         get() = nameProp.value
-        set(value)
-        {
+        set(value) {
             nameProp.value = value
         }
 
@@ -61,15 +58,13 @@ class Database private constructor()
      */
     var locked: Boolean
         get() = lockedProp.value
-        set(value)
-        {
+        set(value) {
             lockedProp.value = value
         }
 
     var currentJob: Job? = null
 
-    init
-    {
+    init {
         nameProp.addListener { _, oldValue, _ ->
             previousName = oldValue
 
@@ -79,25 +74,21 @@ class Database private constructor()
     }
 
     constructor(name: String, persistence: DatabasePersistence)
-            : this()
-    {
+            : this() {
         this.name = name
         this.persistence = persistence
         persistence.database = this
     }
 
-    operator fun plusAssign(acc: Account)
-    {
+    operator fun plusAssign(acc: Account) {
         accounts.add(acc)
     }
 
-    fun load()
-    {
+    fun load() {
         persistence.deserialize()
     }
 
-    fun save()
-    {
+    fun save() {
         GlobalScope.launch {
             currentJob?.join()
 
@@ -107,8 +98,7 @@ class Database private constructor()
         }
     }
 
-    private fun rename()
-    {
+    private fun rename() {
         GlobalScope.launch {
             currentJob?.join()
 
@@ -119,23 +109,19 @@ class Database private constructor()
         }
     }
 
-    fun incrementRevision()
-    {
+    fun incrementRevision() {
         revision++
     }
 
-    fun lock()
-    {
-        if (!locked)
-        {
+    fun lock() {
+        if (!locked) {
             locked = true
             log.debug("Locked.")
         }
     }
 
     @Throws(InvalidPasswordException::class)
-    fun unlock(password: String)
-    {
+    fun unlock(password: String) {
         if (!locked)
             throw IllegalStateException("Not locked.")
 
@@ -146,8 +132,7 @@ class Database private constructor()
 
     override fun equals(other: Any?) = other != null && other is Database && other.nameProp.value == nameProp.value
 
-    override fun hashCode(): Int
-    {
+    override fun hashCode(): Int {
         var result = nameProp.hashCode()
         result = 31 * result + persistence.hashCode()
         result = 31 * result + accounts.hashCode()
@@ -158,15 +143,13 @@ class Database private constructor()
         return result
     }
 
-    class Model : ItemViewModel<Database>(Database())
-    {
+    class Model : ItemViewModel<Database>(Database()) {
         val name = bind(Database::nameProp)
 
         var persistenceModel: ItemViewModel<out DatabasePersistence>? = null
     }
 
-    companion object
-    {
+    companion object {
         private val log = LoggerFactory.getLogger(Database::class.java)
 
         /**
@@ -183,8 +166,7 @@ class Database private constructor()
         /**
          * Set and schedule a lock timer.
          */
-        fun setLockTimer(duration: Int)
-        {
+        fun setLockTimer(duration: Int) {
             if (duration <= 0 || duration == lockTask?.duration)
                 return
 
@@ -198,16 +180,14 @@ class Database private constructor()
         /**
          * Nullifies the current lock timer, if present.
          */
-        fun clearLockTimer()
-        {
+        fun clearLockTimer() {
             if (lockTask == null)
                 return
             lockTask!!.cancel()
             lockTask = null
         }
 
-        fun closeTimer()
-        {
+        fun closeTimer() {
             clearLockTimer()
             timer.cancel()
         }

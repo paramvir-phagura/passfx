@@ -10,8 +10,7 @@ import net.upm.model.Database
 import net.upm.util.database
 import tornadofx.*
 
-class MainView : View("PassFx")
-{
+class MainView : View("PassFx") {
     private val controller: MainViewController by inject()
 
     val databaseTabPane = TabPane()
@@ -181,8 +180,7 @@ class MainView : View("PassFx")
         bottom = statusLabel
     }
 
-    init
-    {
+    init {
         accountSelected.addListener { _, _, newValue ->
             if (newValue)
                 openableUrl.value = currentAccountSelection!!.openableUrl
@@ -191,19 +189,16 @@ class MainView : View("PassFx")
         }
     }
 
-    override fun onBeforeShow()
-    {
+    override fun onBeforeShow() {
         // Init the controller
         controller
     }
 
-    override fun onDock()
-    {
+    override fun onDock() {
         controller.loadInitialDatabase()
     }
 
-    fun newTab(db: Database): Tab
-    {
+    fun newTab(db: Database): Tab {
         val tab = Tab()
         tab.textProperty().bind(db.nameProp)
         tab.contextMenu = ContextMenu().apply {

@@ -12,22 +12,19 @@ import net.upm.util.toggleMap
 import tornadofx.*
 
 class NewDatabaseWizard
-    : Wizard("New Database Wizard", "Create a new database for your accounts.")
-{
+    : Wizard("New Database Wizard", "Create a new database for your accounts.") {
     val dbModel: Database.Model by inject()
 
     override val canGoNext = currentPageComplete
     override val canFinish = allPagesComplete
 
-    init
-    {
+    init {
         add(GeneralInput::class)
         add(StorageInput::class)
 //        add(EncryptionInput::class)
     }
 
-    override fun onSave()
-    {
+    override fun onSave() {
         val persistence = dbModel.persistenceModel!!
         dbModel.item.persistence = persistence.item
         persistence.item.database = dbModel.item
@@ -36,8 +33,7 @@ class NewDatabaseWizard
     }
 }
 
-class GeneralInput : View("General")
-{
+class GeneralInput : View("General") {
     private val dbModel: Database.Model by inject()
 
     override val complete = dbModel.valid(dbModel.name)
@@ -52,13 +48,11 @@ class GeneralInput : View("General")
     }
 }
 
-class StorageInput : View("Storage")
-{
+class StorageInput : View("Storage") {
     val dbModel: Database.Model by inject()
     private val controller: StorageInputController by inject()
 
-    init
-    {
+    init {
         isComplete = false
     }
 
@@ -85,8 +79,7 @@ class StorageInput : View("Storage")
 
                                         button("Open").action {
                                             val file = controller.chooseDir()
-                                            if (file != null)
-                                            {
+                                            if (file != null) {
                                                 val dir = file.parentFile
                                                 dirProp.value = dir.toString()
                                                 dirField.text = file.toString()
@@ -102,7 +95,7 @@ class StorageInput : View("Storage")
                                 }
 
                                 dbModel.persistenceModel!!.valid(persistence.dir, persistence.password)
-                                        .addListener { _, _, newValue -> isComplete = newValue }
+                                    .addListener { _, _, newValue -> isComplete = newValue }
                             }
                         }
                     }
@@ -113,8 +106,7 @@ class StorageInput : View("Storage")
     }
 }
 
-class EncryptionInput : View("Encryption")
-{
+class EncryptionInput : View("Encryption") {
     override val root = fieldset(title) {
         TODO("Not implemented.")
     }

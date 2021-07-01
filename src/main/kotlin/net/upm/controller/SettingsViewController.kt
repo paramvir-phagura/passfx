@@ -8,15 +8,14 @@ import net.upm.view.SettingsView
 import tornadofx.ChangeListener
 import tornadofx.Controller
 
-class SettingsViewController : Controller()
-{
+class SettingsViewController : Controller() {
+
     private val view: SettingsView by inject()
     private val model: UserConfiguration.Model by inject()
     val shouldLock = SimpleBooleanProperty(UserConfiguration.INSTANCE.autoLock.value > 0)
     val expandHandler = ChangeListener<Number> { _, _, _ -> view.currentStage!!.sizeToScene() }
 
-    operator fun invoke()
-    {
+    operator fun invoke() {
         view.enableLock.selectedProperty().addListener { _, _, newValue ->
             if (newValue)
                 view.autoLockField.text = "5"
@@ -25,29 +24,24 @@ class SettingsViewController : Controller()
         }
     }
 
-    fun chooseInitialDb()
-    {
+    fun chooseInitialDb() {
         val file = chooseDatabase(view.currentStage!!) ?: return
         val path = file.toPath()
         model.initialDatabase.value = path.toString()
     }
 
-    fun ok()
-    {
+    fun ok() {
         model.commit()
         view.close()
 
-        if (shouldLock.value)
-        {
+        if (shouldLock.value) {
             Database.setLockTimer(UserConfiguration.INSTANCE.autoLock.value)
-        } else
-        {
+        } else {
             Database.clearLockTimer()
         }
     }
 
-    fun cancel()
-    {
+    fun cancel() {
         view.close()
     }
 }
