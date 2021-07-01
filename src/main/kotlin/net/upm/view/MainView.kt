@@ -219,4 +219,3 @@ class MainView : View("PassFx")
         return tab
     }
 }
-

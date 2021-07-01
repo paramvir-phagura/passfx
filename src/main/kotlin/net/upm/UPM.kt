@@ -7,9 +7,9 @@ import net.upm.model.Database
 import net.upm.model.DatabaseManager
 import net.upm.util.config.UserConfiguration
 import net.upm.view.MainView
-import org.slf4j.LoggerFactory
 import tornadofx.App
 import tornadofx.importStylesheet
+import org.slf4j.LoggerFactory
 
 class UPM : App(MainView::class)
 {
