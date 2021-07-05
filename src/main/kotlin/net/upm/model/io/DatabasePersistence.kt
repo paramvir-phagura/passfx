@@ -2,6 +2,7 @@
 
 package net.upm.model.io
 
+import javafx.beans.property.SimpleDoubleProperty
 import net.upm.crypto.EncryptionService
 import net.upm.model.Account
 import net.upm.model.Database
@@ -18,6 +19,8 @@ import java.nio.file.Paths
 
 sealed class DatabasePersistence(protected var password: String) {
     internal lateinit var database: Database
+
+    val progress = SimpleDoubleProperty()
 
     @Throws(Exception::class)
     abstract fun deserialize()
@@ -61,6 +64,8 @@ sealed class FileDatabasePersistence(dir: String, password: String) : DatabasePe
         val startTime = System.currentTimeMillis()
         val data = load()
 //        log.debug("FILE LENGTH READ: ${data.size}")
+        progress.value = 10.0
+
         if (!verifyFileData(data))
             throw DatabaseNotFoundException("Database file couldn't be verified")
         log.debug("Database file verified!")
@@ -86,6 +91,7 @@ sealed class FileDatabasePersistence(dir: String, password: String) : DatabasePe
         database.revision = readInt(stream)
         database.remoteLocation = readString(stream)
         database.authDBEntry = readString(stream)
+        progress.value = 25.0
 
         while (true) {
             try {
@@ -103,6 +109,7 @@ sealed class FileDatabasePersistence(dir: String, password: String) : DatabasePe
         }
 
         log.debug("Loaded db in ${System.currentTimeMillis() - startTime} millis")
+        progress.value = 1.0
     }
 
     @Throws(Exception::class)

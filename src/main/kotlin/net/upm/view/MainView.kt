@@ -1,8 +1,10 @@
 package net.upm.view
 
 import javafx.beans.property.SimpleBooleanProperty
+import javafx.geometry.Insets
 import javafx.scene.control.*
 import javafx.scene.image.ImageView
+import javafx.scene.layout.HBox
 import javafx.scene.layout.Priority
 import net.upm.controller.MainViewController
 import net.upm.model.Account
@@ -17,7 +19,10 @@ class MainView : View("PassFx") {
     val accountsView = ListView<Account>()
     val searchField = TextField()
     val sortBox = ComboBox<AccountSort>()
+    val statusBar = HBox()
     val statusLabel = Label("Get started by creating or opening a database")
+    val progressBar = ProgressBar()
+    val progressLabel = Label()
 
     val currentDatabaseSelection
         get() = databaseTabPane.selectionModel.selectedItem?.database
@@ -158,7 +163,7 @@ class MainView : View("PassFx") {
                     enableWhen(searchField.textProperty().isNotEmpty)
                     action { controller.clearSearch() }
                 }
-                pane {
+                region {
                     hgrow = Priority.ALWAYS
                 }
                 imageview("images/sort.png")
@@ -177,7 +182,11 @@ class MainView : View("PassFx") {
         /**
          * Status label
          */
-        bottom = statusLabel
+        bottom = statusBar.apply {
+            add(statusLabel)
+            region { hgrow = Priority.ALWAYS }
+            add(progressLabel)
+        }
     }
 
     init {
@@ -195,6 +204,8 @@ class MainView : View("PassFx") {
     }
 
     override fun onDock() {
+        // Required here otherwise onDock() isn't called
+        statusBar.add(progressBar)
         controller.loadInitialDatabase()
     }
 

@@ -493,12 +493,12 @@
     -fx-background-color: derive(-swatch-grey, 50.0%);
     -fx-background-radius: 2.0;
     -fx-padding: 0.0;
+    -fx-background-insets: 2 2 2 2;
 }
 
 .progress-bar>.bar {
     -fx-background-color: -swatch-500;
     -fx-background-radius: 2.0;
-    -fx-background-insets: 0.0;
     -fx-border-width: 0.0;
     -fx-effect: null;
 }

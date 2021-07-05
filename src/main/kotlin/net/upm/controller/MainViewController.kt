@@ -1,6 +1,7 @@
 package net.upm.controller
 
 import javafx.application.Platform
+import javafx.beans.property.SimpleDoubleProperty
 import javafx.collections.ListChangeListener
 import javafx.collections.ObservableList
 import javafx.scene.control.ButtonType
@@ -28,10 +29,15 @@ import java.nio.file.Paths
 
 /** Controller for [MainView]. */
 class MainViewController : Controller() {
-
     private val view: MainView by inject()
 
     private val emptyAccountsList = emptyList<Account>().asObservable()
+
+    val progressProperty = SimpleDoubleProperty()
+
+    var progress: Double
+        get() = progressProperty.value
+        set(newValue) { progressProperty.value = newValue }
 
     init {
         // New database listener
@@ -78,6 +84,22 @@ class MainViewController : Controller() {
                 viewAccount(view.accountsView.selectionModel.selectedItem)
             }
         }
+
+        progressProperty.bindBidirectional(view.progressBar.progressProperty())
+        progressProperty.addListener { _, ov, nv ->
+            if (ov == nv)
+                return@addListener
+
+            if (view.progressBar.progress <= 0.0 || view.progressBar.progress >= 1.0) {
+                view.progressBar.hide()
+                view.progressLabel.hide()
+            } else {
+                view.progressLabel.text = "${(nv as Double * 100).toInt()}%"
+                view.progressBar.show()
+                view.progressLabel.show()
+            }
+        }
+        clearProgress()
     }
 
     /** Open [NewDatabaseWizard] for database creation by the user. */
@@ -125,6 +147,7 @@ class MainViewController : Controller() {
     /** Load [database] via its persistence method.*/
     @Throws(InvalidPasswordException::class, DuplicateDatabaseException::class, Exception::class)
     private fun loadDatabase(database: Database) {
+        database.persistence.progress.bindBidirectional(progressProperty)
         database.load()
         DatabaseManager += database
     }
@@ -426,6 +449,10 @@ class MainViewController : Controller() {
         view.copyableUsername.value = acc != null && acc.username.isNotEmpty.value
         view.copyablePassword.value = acc != null && acc.password.isNotEmpty.value
         view.openableUrl.value = acc != null && acc.url.isNotEmpty.value
+    }
+
+    fun clearProgress() {
+        progress = 0.0
     }
 
     /** Quit the application. */
