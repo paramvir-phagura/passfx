@@ -1,7 +1,6 @@
 package net.upm.view
 
 import javafx.beans.property.SimpleBooleanProperty
-import javafx.geometry.Insets
 import javafx.scene.control.*
 import javafx.scene.image.ImageView
 import javafx.scene.layout.HBox
@@ -42,66 +41,66 @@ class MainView : View("PassFx") {
          */
         top = vbox {
             menubar {
-                menu(messages["mainView.databaseMenu"]) {
-                    item(messages["mainView.newDatabaseItem"]).action { controller.newDatabase() }
-                    item(messages["mainView.openDatabaseItem"]).action { controller.openDatabase() }
-//                    item("Export").isDisable = true
-                    item("Import").action { controller.import() }
-                    item("Close") {
+                menu(messages["databaseMenu"]) {
+                    item(messages["newDatabaseMenuItem"]).action { controller.newDatabase() }
+                    item(messages["openDatabaseMenuItem"]).action { controller.openDatabase() }
+                    item(messages["importMenuItem"]).action { controller.import() }
+                    item(messages["exportMenuItem"]).isDisable = true
+                    item("Close Database") {
                         enableWhen(databaseSelected)
                         action { controller.closeTab() }
                     }
                     separator()
-                    item("Sync") {
+                    item(messages["syncWithRemoteDatabaseMenuItem"]) {
                         enableWhen(databaseSelected)
                         action { controller.sync() }
                     }
-                    item("Change Password") {
+                    item(messages["changeMasterPasswordMenuItem"]) {
                         enableWhen(databaseSelected)
                         action { controller.changePassword() }
                     }
-                    item("Properties") {
+                    item(messages["databasePropertiesMenuItem"]) {
                         enableWhen(databaseSelected)
                         action { controller.databaseProperties() }
                     }
                     separator()
-                    item("Quit App").action { controller.quit() }
+                    item(messages["exitMenuItem"]).action { controller.quit() }
                 }
 
-                menu("Account") {
-                    item("Add") {
+                menu(messages["accountMenu"]) {
+                    item(messages["addAccountMenuItem"]) {
                         enableWhen(databaseSelected)
                         action { controller.newAccount() }
                     }
-                    item("Edit") {
+                    item(messages["editAccountMenuItem"]) {
                         enableWhen(accountSelected)
                         action { controller.editAccount(currentAccountSelection!!) }
                     }
-                    item("Delete") {
+                    item(messages["deleteAccountMenuItem"]) {
                         enableWhen(accountSelected)
                         action { controller.deleteAccount(currentDatabaseSelection!!, currentAccountSelection!!) }
                     }
-                    item("View") {
+                    item(messages["viewAccountMenuItem"]) {
                         enableWhen(accountSelected)
                         action { controller.viewAccount(currentAccountSelection!!) }
                     }
-                    item("Copy Username") {
+                    item(messages["copyUsernameMenuItem"]) {
                         enableWhen(copyableUsername)
                         action { controller.copyUsername(currentAccountSelection!!) }
                     }
-                    item("Copy Password") {
+                    item(messages["copyPasswordMenuItem"]) {
                         enableWhen(copyablePassword)
                         action { controller.copyPassword(currentAccountSelection!!) }
                     }
-                    item("Launch URL") {
+                    item(messages["launchURLMenuItem"]) {
                         enableWhen(openableUrl)
                         action { controller.launchUrl(currentAccountSelection!!) }
                     }
                 }
 
-                menu("Help") {
-                    item("Settings").action { controller.showSettingsView() }
-                    item("About").action { controller.showAboutView() }
+                menu(messages["helpMenu"]) {
+                    item(messages["optionsMenuItem"]).action { controller.showSettingsView() }
+                    item(messages["aboutMenuItem"]).action { controller.showAboutView() }
                 }
 
 //                val os = System.getProperty("os.name")

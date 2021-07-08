@@ -5,14 +5,18 @@ import javafx.scene.image.Image
 import javafx.stage.Stage
 import net.upm.model.Database
 import net.upm.model.DatabaseManager
+import net.upm.model.Language
 import net.upm.util.config.UserConfiguration
 import net.upm.view.MainView
 import org.slf4j.LoggerFactory
 import tornadofx.App
+import tornadofx.FX
 import tornadofx.importStylesheet
+import java.util.*
 
 class UPM : App(MainView::class) {
     init {
+        FX.messages = ResourceBundle.getBundle("upm", Locale(Language.valueOf(UserConfiguration.INSTANCE.language.value.uppercase()).code))
         importStylesheet(UserConfiguration.INSTANCE.theme.value)
     }
 

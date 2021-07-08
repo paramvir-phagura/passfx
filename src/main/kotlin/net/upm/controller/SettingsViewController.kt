@@ -1,12 +1,16 @@
 package net.upm.controller
 
+import javafx.application.Platform
 import javafx.beans.property.SimpleBooleanProperty
+import javafx.scene.control.ButtonType
 import net.upm.model.Database
 import net.upm.util.chooseDatabase
 import net.upm.util.config.UserConfiguration
 import net.upm.view.SettingsView
 import tornadofx.ChangeListener
 import tornadofx.Controller
+import tornadofx.isDirty
+import tornadofx.warning
 
 class SettingsViewController : Controller() {
 
@@ -31,6 +35,11 @@ class SettingsViewController : Controller() {
     }
 
     fun ok() {
+        var restartPending = false
+
+        if (model.language.isDirty)
+            restartPending = true
+
         model.commit()
         view.close()
 
@@ -38,6 +47,14 @@ class SettingsViewController : Controller() {
             Database.setLockTimer(UserConfiguration.INSTANCE.autoLock.value)
         } else {
             Database.clearLockTimer()
+        }
+
+        if (restartPending) {
+            warning("Restart Pending",
+                "PassFx must restart in order to apply the changes!",
+                buttons = arrayOf(ButtonType.OK, ButtonType.CANCEL),
+                title = "Warning",
+                actionFn = { if (it == ButtonType.OK) Platform.exit() })
         }
     }
 

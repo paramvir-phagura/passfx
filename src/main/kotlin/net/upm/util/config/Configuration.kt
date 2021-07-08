@@ -13,14 +13,12 @@ import java.nio.file.Files
 import java.nio.file.Paths
 
 sealed class Configuration {
-
     protected val settings = HashMap<String, String>()
 
     abstract fun save()
 }
 
 sealed class JsonConfiguration(fileName: String) : Configuration() {
-
     private val path = Paths.get("$CONFIG_DIR/$fileName.json")
 
     init {
@@ -50,7 +48,6 @@ sealed class JsonConfiguration(fileName: String) : Configuration() {
     }
 
     companion object {
-
         private val CONFIG_DIR = System.getProperty("user.dir")
 
         private val log = LoggerFactory.getLogger(JsonConfiguration::class.java)
@@ -66,11 +63,12 @@ sealed class JsonConfiguration(fileName: String) : Configuration() {
 }
 
 class UserConfiguration private constructor() : JsonConfiguration("app-preferences") {
-
     @Expose
     val theme = SimpleStringProperty(settings["theme"] ?: "/themes/material-design.css")
     @Expose
     val initialDatabase = SimpleStringProperty(settings["initialDatabase"] ?: "")
+    @Expose
+    val language = SimpleStringProperty(settings["language"] ?: "English")
     @Expose
     val autoLock = SimpleIntegerProperty(settings["autoLock"]?.toInt() ?: 0)
     @Expose
@@ -90,8 +88,9 @@ class UserConfiguration private constructor() : JsonConfiguration("app-preferenc
         val INSTANCE = UserConfiguration()
     }
 
-    class Model : ItemViewModel<UserConfiguration>(UserConfiguration.INSTANCE) {
+    class Model : ItemViewModel<UserConfiguration>(INSTANCE) {
         val initialDatabase = bind(UserConfiguration::initialDatabase)
+        val language = bind(UserConfiguration::language)
         val autoLock = bind(UserConfiguration::autoLock)
         val alwaysOnTop = bind(UserConfiguration::alwaysOnTop)
         val hidePassword = bind(UserConfiguration::hidePassword)

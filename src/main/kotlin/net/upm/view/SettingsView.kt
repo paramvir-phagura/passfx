@@ -6,6 +6,7 @@ import javafx.scene.control.CheckBox
 import javafx.scene.control.TextField
 import javafx.scene.control.TitledPane
 import net.upm.controller.SettingsViewController
+import net.upm.model.Language
 import net.upm.util.cancelButton
 import net.upm.util.config.UserConfiguration
 import net.upm.util.maskableTextField
@@ -65,12 +66,12 @@ class SettingsView : View("Settings") {
                     label("Language:")
                 }
                 row {
-                    combobox(values = listOf("English")) {
+                    combobox(property = model.language, values = Language.values().map { it.toString() }) {
                         gridpaneConstraints {
                             columnSpan = 2
                             useMaxWidth = true
                         }
-                    }.value = "English"
+                    }
                 }
                 row {
                     enableLock = checkbox("Lock when out of focus (minutes):") {
