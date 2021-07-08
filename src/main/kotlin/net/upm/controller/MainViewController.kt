@@ -5,6 +5,8 @@ import javafx.beans.property.SimpleDoubleProperty
 import javafx.collections.ListChangeListener
 import javafx.collections.ObservableList
 import javafx.scene.control.ButtonType
+import javafx.scene.control.ListCell
+import javafx.scene.input.MouseEvent
 import javafx.stage.StageStyle
 import net.upm.model.Account
 import net.upm.model.Database
@@ -79,10 +81,25 @@ class MainViewController : Controller() {
         }
 
         // Open the current account selection upon double click
-        view.accountsView.setOnMouseClicked { e ->
-            if (e.clickCount >= 2) {
-                viewAccount(view.accountsView.selectionModel.selectedItem)
+        view.accountsView.setCellFactory {
+            val cell = object : ListCell<Account>() {
+                override fun updateItem(account: Account?, empty: Boolean) {
+                    super.updateItem(account, empty)
+
+                    if (empty || account == null) {
+                        text = null
+                        graphic = null
+                    } else {
+                        text = account.name.value
+                    }
+                }
             }
+            cell.setOnMouseClicked { e ->
+                if (e.clickCount >= 2 && cell.item != null) {
+                    viewAccount(cell.item!!)
+                }
+            }
+            return@setCellFactory cell
         }
 
         progressProperty.bindBidirectional(view.progressBar.progressProperty())
