@@ -222,11 +222,9 @@ class MainViewController : Controller() {
                 promptPassword("Confirm your new password:") { confirm ->
                     comparePasswords(newPassword, confirm)
                     db.persistence.changePassword(newPassword)
-                    information(
-                        "Password changed!",
+                    information("Password changed!",
                         "The password for \"${db.name}\" has been successfully changed.",
-                        ButtonType.OK, owner = view.primaryStage
-                    )
+                        ButtonType.OK, owner = view.primaryStage)
                 }
             }
         }
