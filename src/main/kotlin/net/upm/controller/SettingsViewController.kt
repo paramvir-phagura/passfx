@@ -9,8 +9,8 @@ import net.upm.util.config.UserConfiguration
 import net.upm.view.SettingsView
 import tornadofx.ChangeListener
 import tornadofx.Controller
+import tornadofx.information
 import tornadofx.isDirty
-import tornadofx.warning
 
 class SettingsViewController : Controller() {
 
@@ -50,9 +50,10 @@ class SettingsViewController : Controller() {
         }
 
         if (restartPending) {
-            warning("Restart Pending",
+            information("Restart Pending",
                 "PassFx must restart in order to apply the changes!",
                 buttons = arrayOf(ButtonType.OK, ButtonType.CANCEL),
+                owner = view.currentStage,
                 title = "Warning",
                 actionFn = { if (it == ButtonType.OK) Platform.exit() })
         }
