@@ -1,36 +1,47 @@
 package net.upm.util.config.imex
 
 import net.upm.util.imex.LastPassIMEX
+import org.junit.BeforeClass
 import org.junit.Test
 import java.nio.file.Files
 import java.nio.file.Paths
 
-class LastPassImexTest
-{
+class LastPassImexTest {
+    private val path = Paths.get("lastpass.txt")
+
     @Test
-    fun import()
-    {
-        val path = Paths.get(this::class.java.getResource("/lastpass.txt").toURI())
+    fun import() {
         if (!Files.exists(path))
             return
 
         val data = String(Files.readAllBytes(path))
         val lastPassImex = LastPassIMEX(data)
-        val accounts = lastPassImex.import()
-        accounts.forEach { println("${it.name.value}\n\t${it.username.value}\n\t${it.password.value}\n\t${it.url.value}\n\t${it.notes.value}") }
-        println("Imported ${accounts.size} accounts from LastPass.")
+        lastPassImex.import.start()
+        lastPassImex.import.setOnSucceeded {
+            lastPassImex.import.value.apply {
+                forEach {
+                    println("${it.name.value}\n\t${it.username.value}\n\t${it.password.value}\n\t${it.url.value}\n\t${it.notes.value}")
+                }
+                println("Imported $size accounts from LastPass.")
+            }
+        }
     }
 
     @Test
-    fun splitLines()
-    {
-        val path = Paths.get(this::class.java.getResource("/lastpass.txt").toURI())
+    fun splitLines() {
         if (!Files.exists(path))
             return
 
-        val data = String(Files.readAllBytes(path))
-        val lastPassImex = LastPassIMEX(data)
-        val lines = lastPassImex.splitLines(data)
-//        println(lines.size)
+//        val data = String(Files.readAllBytes(path))
+//        val lastPassImex = LastPassIMEX(data)
+//        val lines = lastPassImex.splitLines(data)
+//        println(lines)
+    }
+
+    companion object {
+        @BeforeClass @JvmStatic
+        fun pre() {
+            FxDummy.initFx()
+        }
     }
 }

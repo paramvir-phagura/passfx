@@ -2,11 +2,9 @@ package net.upm.util.config
 
 import org.junit.Test
 
-class JsonConfigTest
-{
+class JsonConfigTest {
     @Test
-    fun loadConfig()
-    {
+    fun loadConfig() {
         println(UserConfiguration.INSTANCE.initialDatabase)
     }
 }

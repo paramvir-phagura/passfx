@@ -5,7 +5,7 @@ import org.junit.Test
 
 class LocalDatabaseSerializationTest
 {
-    @Test
+//    @Test
     fun loadDatabase()
     {
         println("Loading database...")
