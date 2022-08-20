@@ -103,6 +103,7 @@ class MainView : View("PassFx") {
                     item(messages["aboutMenuItem"]).action { controller.showAboutView() }
                 }
 
+                // Doesn't work
 //                val os = System.getProperty("os.name")
 //                if (os != null && os.startsWith("Mac"))
 //                {

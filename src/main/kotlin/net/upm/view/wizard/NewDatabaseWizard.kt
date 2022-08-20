@@ -62,7 +62,7 @@ class StorageInput : View("Storage") {
                 combobox(values = values().asList()) {
                     toggleMap {
                         LOCAL toggles {
-                            Fieldset("Location").apply {
+                            fieldset("Location") {
                                 val persistence = find<LocalFileDatabasePersistence.Model>()
                                 dbModel.persistenceModel = persistence
 

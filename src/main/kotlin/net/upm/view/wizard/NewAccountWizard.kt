@@ -10,6 +10,7 @@ import tornadofx.*
 class NewAccountWizard : Wizard("New Account Wizard", "Add an account containing credentials.") {
     val accountModel: Account.Model by inject()
 
+    // TODO Place in controller
     private val enterHandler = EventHandler<KeyEvent> {
         if (it.code == KeyCode.ENTER) {
             // Why is this not a method?
