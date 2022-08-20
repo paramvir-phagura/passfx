@@ -1,11 +1,15 @@
 package net.upm.view.wizard
 
+import javafx.beans.property.SimpleStringProperty
 import javafx.scene.layout.VBox
+import net.upm.controller.wizard.ImportWizardController
 import net.upm.model.Database
+import net.upm.model.io.DatabaseStorageType
+import net.upm.util.imex.BitwardenIMEX
 import net.upm.util.imex.IMEX
 import net.upm.util.imex.LastPassIMEX
-import net.upm.util.imex.SupportedIMEX.LASTPASS
-import net.upm.util.imex.SupportedIMEX.values
+import net.upm.util.imex.SupportedIMEX
+import net.upm.util.imex.SupportedIMEX.*
 import net.upm.util.toggleMap
 import tornadofx.*
 
@@ -25,12 +29,9 @@ class ImportWizard : Wizard("Import Wizard", "Import data from another password 
 
     override fun onSave() {
         try {
-            val db = dbModel.item!!
             val persistence = dbModel.persistenceModel!!
-            val accounts = imexModel.type!!.item.import()
             dbModel.item.persistence = persistence.item
             persistence.item.database = dbModel.item
-            db.accounts.addAll(accounts)
 
             isComplete = dbModel.commit() && persistence.commit() && imexModel.commit()
         } catch (e: Exception) {
@@ -42,16 +43,17 @@ class ImportWizard : Wizard("Import Wizard", "Import data from another password 
 class ImportView : View("Import") {
     private val dbModel: Database.Model by inject()
     private val imexModel: IMEX.Model by inject()
+    private val controller: ImportWizardController by inject()
 
     override val root = form {
-        fieldset {
+        fieldset("Import") {
             field("From") {
                 combobox(values = values().asList()) {
                     toggleMap {
                         LASTPASS toggles {
                             VBox().apply {
                                 val type = find<LastPassIMEX.Model>()
-                                imexModel.type = type
+                                imexModel.imex = type
 
                                 currentStage!!.width = 465.0
                                 currentStage!!.height = 455.0
@@ -61,7 +63,40 @@ class ImportView : View("Import") {
 
                                 label("For instructions on how to import from LastPass, visit...")
 
-                                imexModel.type!!.valid(type.data)
+                                imexModel.imex!!.valid(type.data)
+                                    .addListener { _, _, newValue -> isComplete = newValue }
+                            }
+                        }
+                        BITWARDEN toggles {
+                            fieldset("Bitwarden Settings") bitwarden@ {
+                                val type = find<BitwardenIMEX.Model>()
+                                imexModel.imex = type
+
+                                currentStage!!.width = 465.0
+                                currentStage!!.height = 455.0
+
+                                field("Path") {
+                                    hbox {
+                                        val pathField = textfield(type.file)
+                                        pathField.required()
+
+                                        button("Open").action {
+                                            val file = controller.chooseFile()
+                                            if (file != null) {
+                                                pathField.text = file.toString()
+                                                pathField.positionCaret(pathField.text.length)
+                                            }
+                                        }
+
+                                        spacing = 10.0
+                                    }
+                                }
+
+                                label("For instructions on how to import from Bitwarden, visit...") {
+                                    isWrapText = true
+                                }
+
+                                imexModel.imex!!.valid(type.file)
                                     .addListener { _, _, newValue -> isComplete = newValue }
                             }
                         }
@@ -72,14 +107,39 @@ class ImportView : View("Import") {
         }
     }
 
+    init {
+        isComplete = false
+    }
+
     override fun onSave() {
-        imexModel.type!!.commit()
+        imexModel.imex!!.commit()
         super.onSave()
     }
 }
 
 class ReviewView : View("Review") {
-    override val root = form {
+    private val dbModel: Database.Model by inject()
+    private val imexModel: IMEX.Model by inject()
 
+    private val nameDesc = SimpleStringProperty()
+    private val importDesc = SimpleStringProperty()
+
+    override val root = form {
+        fieldset(title) {
+            spacing = 25.0
+            label(importDesc) {
+                isWrapText = true
+            }
+            label(nameDesc) {
+                isWrapText = true
+            }
+        }
+    }
+
+    override fun onDock() {
+        super.onDock()
+        importDesc.value = "You are importing data from ${SupportedIMEX.forClass(imexModel.imex!!.item!!::class)}."
+        nameDesc.value = "A new database will be created as a " +
+                "${DatabaseStorageType.getFor(dbModel.persistenceModel!!.item!!::class)} under the name \"${dbModel.name.value}\"."
     }
 }
