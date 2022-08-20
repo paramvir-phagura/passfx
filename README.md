@@ -5,7 +5,7 @@ It's open-source, cross-platform, and can be used without an internet connection
 
 ## About
 PassFx was heavily inspired by the [UPM project](https://github.com/adrian/upm-swing).
-The intentions for this program were solely educational.
+The intentions for this program are solely educational.
 
 ## Screenshots
 <img src="https://i.imgur.com/V5jTpd4.png" width="500">
