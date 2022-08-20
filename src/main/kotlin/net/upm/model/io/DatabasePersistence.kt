@@ -2,7 +2,7 @@
 
 package net.upm.model.io
 
-import javafx.beans.property.SimpleDoubleProperty
+import javafx.concurrent.Task
 import net.upm.crypto.EncryptionService
 import net.upm.model.Account
 import net.upm.model.Database
@@ -20,15 +20,13 @@ import java.nio.file.Paths
 sealed class DatabasePersistence(protected var password: String) {
     internal lateinit var database: Database
 
-    val progress = SimpleDoubleProperty()
+    @Throws(Exception::class)
+    abstract fun deserialize() : Task<Unit>
 
     @Throws(Exception::class)
-    abstract fun deserialize()
+    abstract fun serialize() : Task<Unit>
 
-    @Throws(Exception::class)
-    abstract fun serialize()
-
-    abstract fun delete()
+    abstract fun delete() : Task<Unit>
 
     @Throws(Exception::class)
     fun changePassword(password: String) {
@@ -60,56 +58,61 @@ sealed class FileDatabasePersistence(dir: String, password: String) : DatabasePe
         get() = Paths.get(dir).resolve(fileExt(fileName))
 
     @Throws(Exception::class)
-    override fun deserialize() {
-        val startTime = System.currentTimeMillis()
-        val data = load()
-//        log.debug("FILE LENGTH READ: ${data.size}")
-        progress.value = 10.0
+    override fun deserialize() : Task<Unit> {
+        return object : Task<Unit>() {
+            override fun call() {
+                val startTime = System.currentTimeMillis()
+                val data = load()
+//                log.debug("FILE LENGTH READ: ${data.size}")
+                if (!verifyFileData(data))
+                    throw DatabaseNotFoundException("Database file couldn't be verified")
+                log.debug("Database file verified!")
+                updateProgress(25, 100)
+                Thread.sleep(50)
 
-        if (!verifyFileData(data))
-            throw DatabaseNotFoundException("Database file couldn't be verified")
-        log.debug("Database file verified!")
+                val saltIndex = FILE_HEADER.length + 1
+                val salt = ByteArray(EncryptionService.SALT_LENGTH)
+                System.arraycopy(data, saltIndex, salt, 0, EncryptionService.SALT_LENGTH)
 
-        val saltIndex = FILE_HEADER.length + 1
-        val salt = ByteArray(EncryptionService.SALT_LENGTH)
-        System.arraycopy(data, saltIndex, salt, 0, EncryptionService.SALT_LENGTH)
+                val encryptedBytes = ByteArray(data.size - (saltIndex + EncryptionService.SALT_LENGTH))
+                System.arraycopy(data, saltIndex + EncryptionService.SALT_LENGTH, encryptedBytes, 0, encryptedBytes.size)
 
-        val encryptedBytes = ByteArray(data.size - (saltIndex + EncryptionService.SALT_LENGTH))
-        System.arraycopy(data, saltIndex + EncryptionService.SALT_LENGTH, encryptedBytes, 0, encryptedBytes.size)
+                // TODO Add legacy support here
+                val password = password.toCharArray()
+                val encryption = EncryptionService(password, salt)
+                lateinit var decryptionBytes: ByteArray
+                try {
+                    decryptionBytes = encryption.decrypt(encryptedBytes)
+                } catch (e: Exception) {
+                    throw InvalidPasswordException(e)
+                }
+                updateProgress(50, 100)
+                Thread.sleep(50)
 
-        // TODO Add legacy support here
-        val password = password.toCharArray()
-        val encryption = EncryptionService(password, salt)
-        lateinit var decryptionBytes: ByteArray
-        try {
-            decryptionBytes = encryption.decrypt(encryptedBytes)
-        } catch (e: Exception) {
-            throw InvalidPasswordException(e)
-        }
-        val stream = ByteArrayInputStream(decryptionBytes)
+                val stream = ByteArrayInputStream(decryptionBytes)
+                database.revision = readInt(stream)
+                database.remoteLocation = readString(stream)
+                database.authDBEntry = readString(stream)
+                updateProgress(75, 100)
+                Thread.sleep(50)
 
-        database.revision = readInt(stream)
-        database.remoteLocation = readString(stream)
-        database.authDBEntry = readString(stream)
-        progress.value = 25.0
-
-        while (true) {
-            try {
-                val name = readString(stream)
-                val username = readString(stream)
-                val pass = readString(stream)
-                val url = readString(stream)
-                val notes = readString(stream)
-                log.debug("$name, $username, $pass, $url, $notes")
-                val account = Account(name, username, pass, url, notes)
-                database += account
-            } catch (e: Exception) {
-                break
+                while (true) {
+                    try {
+                        val name = readString(stream)
+                        val username = readString(stream)
+                        val pass = readString(stream)
+                        val url = readString(stream)
+                        val notes = readString(stream)
+                        log.debug("$name, $username, $pass, $url, $notes")
+                        val account = Account(name, username, pass, url, notes)
+                        database += account
+                    } catch (e: Exception) {
+                        break
+                    }
+                }
+                log.debug("Loaded db in ${System.currentTimeMillis() - startTime} millis")
             }
         }
-
-        log.debug("Loaded db in ${System.currentTimeMillis() - startTime} millis")
-        progress.value = 1.0
     }
 
     @Throws(Exception::class)
@@ -156,34 +159,41 @@ sealed class FileDatabasePersistence(dir: String, password: String) : DatabasePe
 
     private fun readInt(stream: ByteArrayInputStream) = readString(stream).toInt()
 
+    // TODO Progress
     @Throws(Exception::class)
-    override fun serialize() {
-        val encryption = EncryptionService(password.toCharArray())
-        save(ByteArrayOutputStream().use { out ->
-            val data = ByteArrayOutputStream().use { dataOut ->
-                database.incrementRevision()
-                dataOut.write(flatPack(database.revision.toString()))
-                dataOut.write(flatPack(database.remoteLocation))
-                dataOut.write(flatPack(database.authDBEntry))
-                for (account in database.accounts) {
-                    dataOut.write(flatPack(account.name.value))
-                    dataOut.write(flatPack(account.username.value))
-                    dataOut.write(flatPack(account.password.value))
-                    dataOut.write(flatPack(account.url.value))
-                    dataOut.write(flatPack(account.notes.value))
-                }
-                dataOut.toByteArray()
+    override fun serialize() : Task<Unit> {
+        return object : Task<Unit>() {
+            override fun call() {
+                val encryption = EncryptionService(password.toCharArray())
+                save(ByteArrayOutputStream().use { out ->
+                    val data = ByteArrayOutputStream().use { dataOut ->
+                        database.incrementRevision()
+                        dataOut.write(flatPack(database.revision.toString()))
+                        dataOut.write(flatPack(database.remoteLocation))
+                        dataOut.write(flatPack(database.authDBEntry))
+                        database.accounts.forEachIndexed { idx, account ->
+                            dataOut.write(flatPack(account.name.value))
+                            dataOut.write(flatPack(account.username.value))
+                            dataOut.write(flatPack(account.password.value))
+                            dataOut.write(flatPack(account.url.value))
+                            dataOut.write(flatPack(account.notes.value))
+                            updateProgress(idx.toDouble(), database.accounts.size.toDouble())
+                            Thread.sleep(50)
+                        }
+                        dataOut.toByteArray()
+                    }
+
+                    out.write(FILE_HEADER.toByteArray())
+                    out.write(DATABASE_VERSION)
+                    out.write(encryption.salt)
+                    out.write(encryption.encrypt(data))
+
+                    val encryptedData = out.toByteArray()
+                    log.debug("FILE LENGTH WRITE: ${data.size}")
+                    encryptedData
+                })
             }
-
-            out.write(FILE_HEADER.toByteArray())
-            out.write(DATABASE_VERSION)
-            out.write(encryption.salt)
-            out.write(encryption.encrypt(data))
-
-            val encryptedData = out.toByteArray()
-            log.debug("FILE LENGTH WRITE: ${data.size}")
-            encryptedData
-        })
+        }
     }
 
     @Throws(Exception::class)
@@ -232,8 +242,12 @@ class LocalFileDatabasePersistence private constructor() : FileDatabasePersisten
         }
     }
 
-    override fun delete() {
-        Files.deleteIfExists(Paths.get(dir).resolve(fileExt(database.previousName ?: database.name)))
+    override fun delete() : Task<Unit> {
+        return object : Task<Unit>() {
+            override fun call() {
+                Files.deleteIfExists(Paths.get(dir).resolve(fileExt(database.previousName ?: database.name)))
+            }
+        }
     }
 
     class Model : ItemViewModel<LocalFileDatabasePersistence>(LocalFileDatabasePersistence()) {

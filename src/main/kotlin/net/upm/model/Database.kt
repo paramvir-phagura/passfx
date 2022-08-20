@@ -1,10 +1,9 @@
 package net.upm.model
 
+import javafx.beans.property.ReadOnlyStringProperty
 import javafx.beans.property.SimpleBooleanProperty
 import javafx.beans.property.SimpleStringProperty
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.launch
+import javafx.beans.property.StringProperty
 import net.upm.model.io.DatabasePersistence
 import net.upm.model.io.InvalidPasswordException
 import org.slf4j.LoggerFactory
@@ -14,7 +13,9 @@ import java.util.*
 import java.util.concurrent.TimeUnit
 
 class Database private constructor() {
-    val nameProp = SimpleStringProperty()
+    private val _nameProp: StringProperty = SimpleStringProperty("")
+
+    val nameProp: ReadOnlyStringProperty = _nameProp
 
     /**
      * The name of the database.
@@ -22,7 +23,8 @@ class Database private constructor() {
     var name: String
         get() = nameProp.value
         set(value) {
-            nameProp.value = value
+            previousName = name
+            _nameProp.value = value
         }
 
     internal var previousName: String? = null
@@ -62,19 +64,7 @@ class Database private constructor() {
             lockedProp.value = value
         }
 
-    var currentJob: Job? = null
-
-    init {
-        nameProp.addListener { _, oldValue, _ ->
-            previousName = oldValue
-
-            if (oldValue != null)
-                rename()
-        }
-    }
-
-    constructor(name: String, persistence: DatabasePersistence)
-            : this() {
+    constructor(name: String, persistence: DatabasePersistence) : this() {
         this.name = name
         this.persistence = persistence
         persistence.database = this
@@ -84,30 +74,18 @@ class Database private constructor() {
         accounts.add(acc)
     }
 
-    fun load() {
-        persistence.deserialize()
-    }
-
-    fun save() {
-        GlobalScope.launch {
-            currentJob?.join()
-
-            currentJob = launch {
-                persistence.serialize()
-            }
-        }
-    }
-
-    private fun rename() {
-        GlobalScope.launch {
-            currentJob?.join()
-
-            currentJob = GlobalScope.launch {
-                persistence.delete()
-                save()
-            }
-        }
-    }
+//    fun load() {
+//        persistence.deserialize()
+//    }
+//
+//    fun save() {
+//        persistence.serialize()
+//    }
+//
+//    private fun rename() {
+//        persistence.delete()
+//        save()
+//    }
 
     fun incrementRevision() {
         revision++
@@ -130,7 +108,13 @@ class Database private constructor() {
         log.debug("Unlocked.")
     }
 
-    override fun equals(other: Any?) = other != null && other is Database && other.nameProp.value == nameProp.value
+//    override fun equals(other: Any?) = other != null && other is Database && other.nameProp.value == nameProp.value
+
+    // Compare based on persistence
+    override fun equals(other: Any?): Boolean {
+        return other != null && other is Database && other.nameProp.value == nameProp.value
+    }
+
 
     override fun hashCode(): Int {
         var result = nameProp.hashCode()
@@ -144,7 +128,7 @@ class Database private constructor() {
     }
 
     class Model : ItemViewModel<Database>(Database()) {
-        val name = bind(Database::nameProp)
+        val name = bind(Database::_nameProp)
 
         var persistenceModel: ItemViewModel<out DatabasePersistence>? = null
     }

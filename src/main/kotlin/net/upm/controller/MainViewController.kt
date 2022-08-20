@@ -1,12 +1,11 @@
 package net.upm.controller
 
 import javafx.application.Platform
-import javafx.beans.property.SimpleDoubleProperty
 import javafx.collections.ListChangeListener
 import javafx.collections.ObservableList
+import javafx.concurrent.Task
 import javafx.scene.control.ButtonType
 import javafx.scene.control.ListCell
-import javafx.scene.input.MouseEvent
 import javafx.stage.StageStyle
 import net.upm.model.Account
 import net.upm.model.Database
@@ -16,6 +15,7 @@ import net.upm.model.io.DatabaseStorageType
 import net.upm.model.io.InvalidPasswordException
 import net.upm.model.io.LocalFileDatabasePersistence
 import net.upm.util.Clipboard
+import net.upm.util.TaskScheduler
 import net.upm.util.chooseDatabase
 import net.upm.util.config.UserConfiguration
 import net.upm.util.openUrl
@@ -35,11 +35,11 @@ class MainViewController : Controller() {
 
     private val emptyAccountsList = emptyList<Account>().asObservable()
 
-    val progressProperty = SimpleDoubleProperty()
+    val progressProperty = view.progressBar.progressProperty()
 
     var progress: Double
-        get() = progressProperty.value
-        set(newValue) { progressProperty.value = newValue }
+        get() = progressProperty.get()
+        set(newValue) { progressProperty.set(newValue) }
 
     init {
         // New database listener
@@ -75,7 +75,7 @@ class MainViewController : Controller() {
             refreshStatusLabel()
         }
 
-        // Update account mutation controls based on selection
+        // Enable/disable account mutation controls depending on the selected account
         view.accountsView.selectionModel.selectedItemProperty().addListener { _, _, _ ->
             updateAccountControls()
         }
@@ -102,7 +102,8 @@ class MainViewController : Controller() {
             return@setCellFactory cell
         }
 
-        progressProperty.bindBidirectional(view.progressBar.progressProperty())
+        // Register a progress bar listener that automatically hides/shows it as needed
+        // Additionally updates the progress label with appropriate text
         progressProperty.addListener { _, ov, nv ->
             if (ov == nv)
                 return@addListener
@@ -116,6 +117,8 @@ class MainViewController : Controller() {
                 view.progressLabel.show()
             }
         }
+
+        // Trigger the listener above to hide the progress bar
         clearProgress()
     }
 
@@ -147,6 +150,7 @@ class MainViewController : Controller() {
             } catch (e: Exception) {
                 logger.error("Error loading database", e)
                 error("Error", "Couldn't load database.", owner = view.currentStage)
+                e.printStackTrace()
             }
         }
     }
@@ -164,9 +168,12 @@ class MainViewController : Controller() {
     /** Load [database] via its persistence method.*/
     @Throws(InvalidPasswordException::class, DuplicateDatabaseException::class, Exception::class)
     private fun loadDatabase(database: Database) {
-        database.persistence.progress.bindBidirectional(progressProperty)
-        database.load()
-        DatabaseManager += database
+        TaskScheduler.submitSync(init = {
+            setOnSucceeded {
+                DatabaseManager += database
+            }
+            bindProgressBar(this, "Loading database...")
+        }, database.persistence.deserialize())
     }
 
     /** Open the database file specified in [UserConfiguration], if any. */
@@ -184,12 +191,15 @@ class MainViewController : Controller() {
 
     /** Close and save [database] via its persistence method. */
     fun closeDatabase(database: Database = view.currentDatabaseSelection!!) {
+        sync(database)
         DatabaseManager.databases.remove(database)
     }
 
     /** Save the current database selection via its persistence method. */
-    fun sync() {
-        view.currentDatabaseSelection!!.save()
+    fun sync(database: Database = view.currentDatabaseSelection!!) {
+        TaskScheduler.submitSync(init = {
+            bindProgressBar(this, "Saving ${database.name}...")
+        }, database.persistence.serialize())
     }
 
     /** Close the current tab and its attached database. */
@@ -203,11 +213,9 @@ class MainViewController : Controller() {
         val db = view.currentDatabaseSelection!!
 
         promptInput {
-            confirm(
-                "Are you sure?",
+            confirm("Are you sure?",
                 "The name of this database will be changed from ${db.name} to $it.",
-                owner = view.currentStage
-            ) {
+                owner = view.currentStage) {
                 db.name = it
             }
         }
@@ -224,7 +232,8 @@ class MainViewController : Controller() {
                     db.persistence.changePassword(newPassword)
                     information("Password changed!",
                         "The password for \"${db.name}\" has been successfully changed.",
-                        ButtonType.OK, owner = view.primaryStage)
+                        ButtonType.OK,
+                        owner = view.primaryStage)
                 }
             }
         }
@@ -299,6 +308,10 @@ class MainViewController : Controller() {
         return true
     }
 
+    private fun setStatusLabelText(text: String) {
+        view.statusLabel.text = text
+    }
+
     /** Update status label's text based off the state of the current database selection. */
     private fun refreshStatusLabel() {
         val builder = StringBuilder()
@@ -310,15 +323,24 @@ class MainViewController : Controller() {
                 builder.append(" (Locked)")
         }
 
-        view.statusLabel.text = builder.toString()
+        setStatusLabelText(builder.toString())
     }
 
     /** Open [ImportWizard] for importing data from another password manager. */
+    @Suppress("UNCHECKED_CAST")
     fun import() {
         find(ImportWizard::class.java, scope = Scope()).apply {
             onComplete {
-                DatabaseManager += dbModel.item
-                log.info("Imported ${dbModel.item.accounts.size} accounts.")
+                val db = dbModel.item!!
+
+                TaskScheduler.submitSync(init = {
+                    setOnSucceeded {
+                        val accounts = it.source.value as List<Account>
+                        db.accounts.addAll(accounts)
+                        DatabaseManager += db
+                    }
+                    bindProgressBar(this, "Importing database...")
+                }, imexModel.imex!!.item.import())
             }
             openModal()
         }
@@ -466,8 +488,22 @@ class MainViewController : Controller() {
         view.openableUrl.value = acc != null && acc.url.isNotEmpty.value
     }
 
+    private fun bindProgressBar(task: Task<*>, text: String = "Loading...") {
+        val existingHandler = task.onSucceeded
+
+        task.setOnRunning { setStatusLabelText(text) }
+        task.setOnSucceeded {
+            clearProgress()
+            existingHandler?.handle(it)
+        }
+        view.progressBar.progressProperty().bind(task.progressProperty())
+    }
+
+    /** Unbind and reset the progress bar/status label */
     fun clearProgress() {
+        view.progressBar.progressProperty().unbind()
         progress = 0.0
+        refreshStatusLabel()
     }
 
     /** Quit the application. */

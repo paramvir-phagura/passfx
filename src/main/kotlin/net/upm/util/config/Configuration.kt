@@ -6,6 +6,7 @@ import javafx.beans.property.SimpleBooleanProperty
 import javafx.beans.property.SimpleIntegerProperty
 import javafx.beans.property.SimpleStringProperty
 import javafx.beans.value.ObservableValue
+import net.upm.util.TaskScheduler
 import org.slf4j.LoggerFactory
 import tornadofx.ItemViewModel
 import java.lang.reflect.Type
@@ -34,7 +35,9 @@ sealed class JsonConfiguration(fileName: String) : Configuration() {
     }
 
     override fun save() {
-        Files.newBufferedWriter(path).use { gson.toJson(this, it) }
+        TaskScheduler.submitAsync {
+            Files.newBufferedWriter(path).use { gson.toJson(this, it) }
+        }
     }
 
     private object ObservableValueSerializer : JsonSerializer<ObservableValue<Any>> {

@@ -6,6 +6,7 @@ import javafx.stage.Stage
 import net.upm.model.Database
 import net.upm.model.DatabaseManager
 import net.upm.model.Language
+import net.upm.util.TaskScheduler
 import net.upm.util.config.UserConfiguration
 import net.upm.view.MainView
 import org.slf4j.LoggerFactory
@@ -33,10 +34,12 @@ class UPM : App(MainView::class) {
     }
 
     override fun stop() {
+        super.stop()
+        // TODO These should be tasks
         Database.closeTimer()
         DatabaseManager.saveAll()
         UserConfiguration.INSTANCE.save()
-        super.stop()
+        TaskScheduler.close()
     }
 
     companion object {

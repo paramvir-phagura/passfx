@@ -3,23 +3,30 @@ package net.upm.model
 import javafx.collections.FXCollections
 import javafx.collections.ListChangeListener
 import javafx.collections.ObservableList
+import net.upm.util.TaskScheduler
 import net.upm.util.config.UserConfiguration
 import org.slf4j.LoggerFactory
 
 object DatabaseManager {
     private val log = LoggerFactory.getLogger(DatabaseManager::class.java)
 
-    val databases: ObservableList<Database> = FXCollections.observableArrayList<Database>()
+    val databases: ObservableList<Database> = FXCollections.observableArrayList()
 
     init {
         databases.addListener { change: ListChangeListener.Change<out Database> ->
             change.next()
             if (change.wasAdded()) {
-                log.info("Database \"${change.addedSubList.first().name}\" added.")
+                change.addedSubList.forEach { database ->
+                    database.nameProp.addListener { _, _, _ ->
+                        TaskScheduler.submitSync(database.persistence.delete())
+                        TaskScheduler.submitSync(database.persistence.serialize())
+                    }
+                    log.info("Database \"${database.name}\" added.")
+                }
             } else if (change.wasRemoved()) {
-                val db = change.removed.first()
-                db.save()
-                log.info("Database \"${db.name}\" removed.")
+                val database = change.removed.first()
+//                submitSync(database.persistence.serialize())
+                log.info("Database \"${database.name}\" removed.")
             }
         }
 
@@ -32,6 +39,10 @@ object DatabaseManager {
         databases.add(database)
     }
 
+    operator fun minusAssign(database: Database) {
+        databases.remove(database)
+    }
+
     @Throws(DuplicateDatabaseException::class)
     fun check(database: Database) {
         if (databases.contains(database))
@@ -39,6 +50,8 @@ object DatabaseManager {
     }
 
     fun saveAll() {
-        databases.forEach { it.save() }
+        databases.forEach {
+            TaskScheduler.submitAsync(it.persistence.serialize())
+        }
     }
 }

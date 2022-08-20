@@ -16,13 +16,11 @@ class Account private constructor() {
             return url.isNotEmpty.value
         }
 
-    constructor(
-        name: String = "Unnamed account",
+    constructor(name: String = "Unnamed account",
         username: String,
         password: String,
         url: String,
-        notes: String
-    ) : this() {
+        notes: String) : this() {
         this.name.value = name
         this.username.value = username
         this.password.value = password
@@ -39,5 +37,4 @@ class Account private constructor() {
         val url = bind(Account::url)
         val notes = bind(Account::notes)
     }
-
 }

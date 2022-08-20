@@ -1,27 +1,37 @@
 package net.upm.util.imex
 
-import javafx.beans.property.SimpleDoubleProperty
+import com.google.gson.GsonBuilder
+import com.google.gson.JsonObject
+import javafx.concurrent.Task
 import net.upm.model.Account
 import net.upm.model.Database
+import org.slf4j.LoggerFactory
 import tornadofx.ItemViewModel
+import java.nio.file.Files
+import java.nio.file.Paths
 import kotlin.reflect.KClass
 
 sealed class IMEX {
-    val progress = SimpleDoubleProperty(100.0)
+    open val import: Task<List<Account>>? = null
 
-    abstract fun import(): List<Account>
+    abstract fun import(): Task<List<Account>>
 
     abstract fun export(vararg dbs: Database)
 
     class Model : ItemViewModel<IMEX>() {
-        var type: ItemViewModel<out IMEX>? = null
+        var imex: ItemViewModel<out IMEX>? = null
     }
 }
 
-enum class SupportedIMEX(val formalName: String, val klass: KClass<out IMEX>) {
-    LASTPASS("LastPass", LastPassIMEX::class);
+enum class SupportedIMEX(val formalName: String, val clazz: KClass<out IMEX>) {
+    LASTPASS("LastPass", LastPassIMEX::class),
+    BITWARDEN("Bitwarden", BitwardenIMEX::class);
 
     override fun toString() = formalName
+
+    companion object {
+        fun forClass(clazz: KClass<out IMEX>) = values().firstOrNull { it.clazz == clazz }
+    }
 }
 
 class LastPassIMEX private constructor() : IMEX() {
@@ -31,8 +41,12 @@ class LastPassIMEX private constructor() : IMEX() {
         this.data = data
     }
 
-    override fun import(): List<Account> {
-        return convert(data)
+    override fun import() : Task<List<Account>> {
+        return object : Task<List<Account>>() {
+            override fun call(): List<Account> {
+                return convert(data)
+            }
+        }
     }
 
     fun splitLines(data: String) {
@@ -109,7 +123,89 @@ class LastPassIMEX private constructor() : IMEX() {
         TODO("Not implemented.")
     }
 
+    companion object {
+        private val log = LoggerFactory.getLogger(LastPassIMEX::class.java)
+    }
+
     class Model : ItemViewModel<LastPassIMEX>(LastPassIMEX()) {
         val data = bind(LastPassIMEX::data)
+    }
+}
+
+class BitwardenIMEX private constructor() : IMEX() {
+    private val gson = GsonBuilder()
+        .excludeFieldsWithoutExposeAnnotation()
+        .setPrettyPrinting()
+        .create()
+
+    var file = ""
+
+    constructor(file: String) : this() {
+        this.file = file
+    }
+
+    override fun import() : Task<List<Account>> {
+        return object : Task<List<Account>>() {
+            override fun call(): List<Account> {
+                val path = Paths.get(file)
+                val accounts = mutableListOf<Account>()
+
+                if (Files.exists(path)) {
+                    val data = gson.fromJson(Files.newBufferedReader(path), JsonObject::class.java)
+
+                    if (data != null) {
+                        val items = data.getAsJsonArray("items")
+                        val size = items.size()
+
+                        items.map { it.asJsonObject }.forEachIndexed { idx, item ->
+                            val type = item["type"].asInt
+                            when (type) {
+                                1 -> {
+                                    val name = item["name"].asString
+                                    val notes = if (item["notes"].isJsonNull) null else item["notes"].asString
+
+                                    val login = item["login"].asJsonObject
+                                    val username =
+                                        if (login["username"].isJsonNull) null else login["username"].asString
+                                    val password =
+                                        if (login["password"].isJsonNull) null else login["password"].asString
+                                    val uris =
+                                        if (!item.has("uris") || login["uris"].isJsonNull) null
+                                        else login["uris"].asJsonArray
+                                    val urls = uris?.map { it.asJsonObject }?.map { it["uri"].asString }
+
+                                    val account = Account(
+                                        name,
+                                        username ?: "",
+                                        password ?: "",
+                                        urls?.firstOrNull() ?: "",
+                                        notes ?: ""
+                                    )
+                                    accounts += account
+
+                                    updateProgress(idx.toDouble(), size.toDouble())
+                                    Thread.sleep(10)
+                                }
+                            }
+                        }
+                        updateProgress(size.toDouble(), size.toDouble())
+                        log.info("Imported ${accounts.size} accounts.")
+                    }
+                }
+                return accounts
+            }
+        }
+    }
+
+    override fun export(vararg dbs: Database) {
+        TODO("Not yet implemented")
+    }
+
+    companion object {
+        private val log = LoggerFactory.getLogger(BitwardenIMEX::class.java)
+    }
+
+    class Model : ItemViewModel<BitwardenIMEX>(BitwardenIMEX()) {
+        val file = bind(BitwardenIMEX::file)
     }
 }
