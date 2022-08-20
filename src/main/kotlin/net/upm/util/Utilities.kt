@@ -1,11 +1,13 @@
 package net.upm.util
 
+import javafx.concurrent.Task
 import javafx.stage.FileChooser
 import javafx.stage.Stage
 import net.upm.util.config.UserConfiguration
 import java.awt.Desktop
 import java.io.File
 import java.net.URI
+import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
 
@@ -27,9 +29,15 @@ val previousDirFile: File?
     get() = previousDir?.toFile()
 
 fun chooseDatabase(owner: Stage): File? {
+    var dir = previousDirFile ?: initialDatabaseDirectory?.toFile() ?: USER_HOME_FILE
+    if (!Files.exists(dir.toPath())) {
+        dir = USER_HOME_FILE
+    }
+    // log.debug("Directory $dir")
+
     val fileChooser = FileChooser()
     fileChooser.title = "Select an account database"
-    fileChooser.initialDirectory = previousDirFile ?: initialDatabaseDirectory?.toFile() ?: USER_HOME_FILE
+    fileChooser.initialDirectory = dir
     fileChooser.extensionFilters.addAll(FileChooser.ExtensionFilter("Account DB", "*", "*.adb"))
 
     val file = fileChooser.showOpenDialog(owner)
