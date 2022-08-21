@@ -15,12 +15,14 @@ import tornadofx.FX
 import tornadofx.importStylesheet
 import java.util.*
 
+/** An entry-point that starts this JavaFX program and initializes all necessary resources. */
 class PassFX : App(MainView::class) {
     init {
         FX.messages = ResourceBundle.getBundle("upm", Locale(Language.valueOf(UserConfiguration.INSTANCE.language.value.uppercase()).code))
         importStylesheet(UserConfiguration.INSTANCE.theme.value)
     }
 
+    /** Initialize the primary stage. */
     override fun start(stage: Stage) {
         stage.width = 465.0
         stage.height = 500.0
@@ -33,9 +35,10 @@ class PassFX : App(MainView::class) {
         super.start(stage)
     }
 
+    /** Close/save all open resources, data, etc. */
     override fun stop() {
         super.stop()
-        // TODO These should be tasks
+        // TODO This should be a task
         Database.closeTimer()
         DatabaseManager.saveAll()
         UserConfiguration.INSTANCE.save()
@@ -47,6 +50,7 @@ class PassFX : App(MainView::class) {
 
         private val focusProperty = SimpleBooleanProperty(false)
 
+        /** Indicates whether the primary stage is the current window that is focused on by the system/user. */
         val isInFocus: Boolean
             get() = focusProperty.value
     }

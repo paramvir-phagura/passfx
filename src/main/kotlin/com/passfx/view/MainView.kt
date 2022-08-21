@@ -11,6 +11,7 @@ import javafx.scene.layout.Priority
 import com.passfx.util.database
 import tornadofx.*
 
+/** The primary view. */
 class MainView : View("PassFx") {
     private val controller: MainViewController by inject()
 
@@ -36,9 +37,7 @@ class MainView : View("PassFx") {
     val copyablePassword = SimpleBooleanProperty(false)
 
     override val root = borderpane {
-        /**
-         * Menu
-         */
+        // Menu
         top = vbox {
             menubar {
                 menu(messages["databaseMenu"]) {
@@ -110,9 +109,8 @@ class MainView : View("PassFx") {
 //                    useSystemMenuBarProperty().value = true
 //                }
             }
-            /**
-             * Account mutation toolbar
-             */
+
+            // Account mutation toolbar
             toolbar {
                 button("", ImageView("images/add-account.png")) {
                     enableWhen(databaseSelected)
@@ -149,9 +147,8 @@ class MainView : View("PassFx") {
                     action { controller.showSettingsView() }
                 }
             }
-            /**
-             * Search/filter toolbar
-             */
+
+            // Search/filter toolbar
             toolbar {
                 imageview("images/search.png")
                 searchField.textProperty().addListener { _, _, newValue ->
@@ -175,13 +172,11 @@ class MainView : View("PassFx") {
 
             add(databaseTabPane)
         }
-        /**
-         * Accounts view
-         */
+
+        // Accounts view
         center = accountsView
-        /**
-         * Status label
-         */
+
+        // Status label
         bottom = statusBar.apply {
             add(statusLabel)
             region { hgrow = Priority.ALWAYS }
@@ -190,11 +185,13 @@ class MainView : View("PassFx") {
     }
 
     init {
+        // Bind the value of openableUrl to the one of the current account selection
         accountSelected.addListener { _, _, newValue ->
-            if (newValue)
+            if (newValue) {
                 openableUrl.value = currentAccountSelection!!.openableUrl
-            else
+            } else {
                 openableUrl.value = false
+            }
         }
     }
 
@@ -209,6 +206,7 @@ class MainView : View("PassFx") {
         controller.loadInitialDatabase()
     }
 
+    /** Construct a new [Tab], bind necessary [Database] values, and register controller actions to it. */
     fun newTab(db: Database): Tab {
         val tab = Tab()
         tab.textProperty().bind(db.nameProp)
