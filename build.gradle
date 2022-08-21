@@ -6,7 +6,7 @@ plugins {
 
 group 'net.upm'
 version '1.0-SNAPSHOT'
-mainClassName = "net.upm.UPM"
+mainClassName = "com.passfx.PassFX"
 
 repositories {
     mavenCentral()

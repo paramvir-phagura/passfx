@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<Configuration status="info" packages="net.upm.util.log">
+<Configuration status="info" packages="com.passfx.util">
     <Appenders>
         <ColoredConsoleAppender name="Console">
             <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>
