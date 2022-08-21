@@ -1,6 +1,7 @@
 package com.passfx.model.io
 
 import com.passfx.model.Database
+import com.passfx.model.LocalFileDatabasePersistence
 
 class LocalDatabaseSerializationTest
 {

@@ -4,8 +4,6 @@ import javafx.beans.property.ReadOnlyStringProperty
 import javafx.beans.property.SimpleBooleanProperty
 import javafx.beans.property.SimpleStringProperty
 import javafx.beans.property.StringProperty
-import com.passfx.model.io.DatabasePersistence
-import com.passfx.model.io.InvalidPasswordException
 import org.slf4j.LoggerFactory
 import tornadofx.ItemViewModel
 import tornadofx.asObservable

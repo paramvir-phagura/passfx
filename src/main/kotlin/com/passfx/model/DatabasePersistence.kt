@@ -1,6 +1,6 @@
 @file:Suppress("NAME_SHADOWING")
 
-package com.passfx.model.io
+package com.passfx.model
 
 import javafx.concurrent.Task
 import net.upm.crypto.EncryptionService
@@ -16,6 +16,7 @@ import java.io.IOException
 import java.nio.charset.Charset
 import java.nio.file.Files
 import java.nio.file.Paths
+import kotlin.reflect.KClass
 
 sealed class DatabasePersistence(protected var password: String) {
     internal lateinit var database: Database
@@ -46,6 +47,30 @@ sealed class DatabasePersistence(protected var password: String) {
         } catch (e: InvalidPasswordException) {
             failureFn(e)
         }
+    }
+}
+
+enum class DatabaseStorageType {
+    LOCAL {
+        override val persistence = LocalFileDatabasePersistence::class
+        override val desc = "Local Database"
+    };
+
+    /**
+     * The method of persistence.
+     */
+    abstract val persistence: KClass<out DatabasePersistence>
+
+    /**
+     * A description of the method.
+     */
+    abstract val desc: String
+
+    override fun toString() = desc
+
+    companion object {
+        fun getFor(method: KClass<out DatabasePersistence>) =
+            values().filter { it.persistence == method }.firstOrNull()
     }
 }
 

@@ -1,10 +1,10 @@
 package com.passfx.view
 
 import com.passfx.model.Database
-import com.passfx.model.io.DatabaseStorageType
+import com.passfx.model.DatabaseStorageType
+import com.passfx.util.okButton
 import javafx.geometry.Insets
 import javafx.geometry.Pos
-import com.passfx.util.okButton
 import tornadofx.*
 
 class DatabasePropertiesView : Fragment() {

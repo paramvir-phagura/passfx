@@ -1,14 +1,14 @@
 package com.passfx.view.wizard
 
-import javafx.beans.property.SimpleStringProperty
-import javafx.scene.layout.Priority
 import com.passfx.controller.wizard.StorageInputController
 import com.passfx.model.Database
-import com.passfx.model.io.DatabaseStorageType.LOCAL
-import com.passfx.model.io.DatabaseStorageType.values
-import com.passfx.model.io.LocalFileDatabasePersistence
+import com.passfx.model.DatabaseStorageType.LOCAL
+import com.passfx.model.DatabaseStorageType.values
+import com.passfx.model.LocalFileDatabasePersistence
 import com.passfx.util.maskableTextField
 import com.passfx.util.toggleMap
+import javafx.beans.property.SimpleStringProperty
+import javafx.scene.layout.Priority
 import tornadofx.*
 
 class NewDatabaseWizard

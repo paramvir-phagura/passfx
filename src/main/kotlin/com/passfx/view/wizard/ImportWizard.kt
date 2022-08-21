@@ -2,7 +2,7 @@ package com.passfx.view.wizard
 
 import com.passfx.controller.wizard.ImportWizardController
 import com.passfx.model.Database
-import com.passfx.model.io.DatabaseStorageType
+import com.passfx.model.DatabaseStorageType
 import com.passfx.util.*
 import com.passfx.util.SupportedIMEX.*
 import javafx.beans.property.SimpleStringProperty
