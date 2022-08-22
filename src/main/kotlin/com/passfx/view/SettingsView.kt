@@ -13,6 +13,7 @@ import javafx.scene.control.TextField
 import javafx.scene.control.TitledPane
 import tornadofx.*
 
+/** A view to configure settings for the app. */
 class SettingsView : View("Settings") {
     private val controller: SettingsViewController by inject()
     private val model: UserConfiguration.Model by inject()
@@ -23,9 +24,7 @@ class SettingsView : View("Settings") {
     lateinit var autoLockField: TextField
 
     override val root = vbox {
-        /**
-         * General
-         */
+        /** General */
         general = titledpane("General") {
             gridpane {
                 // Database
@@ -113,9 +112,8 @@ class SettingsView : View("Settings") {
 
         settings = accordion {
             panes.add(general)
-            /**
-             * HTTP
-             */
+
+            /** HTTP */
             fold("HTTP", gridpane()) {
                 row {
                     label("Proxy") {
@@ -172,9 +170,8 @@ class SettingsView : View("Settings") {
             }
             heightProperty().addListener(controller.expandHandler)
         }
-        /**
-         * Ok/cancel
-         */
+
+        /** Ok/cancel */
         hbox {
             okButton { controller.ok() }
             cancelButton { controller.cancel() }

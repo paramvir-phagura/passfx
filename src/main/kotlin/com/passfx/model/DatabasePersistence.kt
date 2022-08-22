@@ -50,27 +50,18 @@ sealed class DatabasePersistence(protected var password: String) {
     }
 }
 
-enum class DatabaseStorageType {
-    LOCAL {
-        override val persistence = LocalFileDatabasePersistence::class
-        override val desc = "Local Database"
-    };
-
-    /**
-     * The method of persistence.
-     */
-    abstract val persistence: KClass<out DatabasePersistence>
-
-    /**
-     * A description of the method.
-     */
-    abstract val desc: String
+enum class DatabaseStorageType(
+    /** The method of persistence. */
+    val persistence: KClass<out DatabasePersistence>,
+    /** A description of the method. */
+    val desc: String
+) {
+    LOCAL(LocalFileDatabasePersistence::class, "Local Database");
 
     override fun toString() = desc
 
     companion object {
-        fun getFor(method: KClass<out DatabasePersistence>) =
-            values().filter { it.persistence == method }.firstOrNull()
+        fun getFor(clazz: KClass<out DatabasePersistence>) = values().firstOrNull { it.persistence == clazz }
     }
 }
 
@@ -184,7 +175,6 @@ sealed class FileDatabasePersistence(dir: String, password: String) : DatabasePe
 
     private fun readInt(stream: ByteArrayInputStream) = readString(stream).toInt()
 
-    // TODO Progress
     @Throws(Exception::class)
     override fun serialize() : Task<Unit> {
         return object : Task<Unit>() {
@@ -203,7 +193,7 @@ sealed class FileDatabasePersistence(dir: String, password: String) : DatabasePe
                             dataOut.write(flatPack(account.url.value))
                             dataOut.write(flatPack(account.notes.value))
                             updateProgress(idx.toDouble(), database.accounts.size.toDouble())
-                            Thread.sleep(50)
+                            Thread.sleep(3)
                         }
                         dataOut.toByteArray()
                     }

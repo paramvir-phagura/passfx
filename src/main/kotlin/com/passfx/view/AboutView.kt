@@ -9,9 +9,10 @@ import com.passfx.util.okButton
 import com.passfx.util.openUrl
 import tornadofx.*
 
+/** A view to display info about this app. */
 class AboutView : View("About") {
     override val root = vbox {
-        text("Made with ❤ by Pavan") {
+        text("Made with ❤ by Paramvir") {
             styleClass += "header-label"
             font = Font.font("Courier New", 36.0)
         }

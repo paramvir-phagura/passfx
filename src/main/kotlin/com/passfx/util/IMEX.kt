@@ -23,14 +23,19 @@ sealed class IMEX {
     }
 }
 
-enum class SupportedIMEX(val formalName: String, val clazz: KClass<out IMEX>) {
-    LASTPASS("LastPass", LastPassIMEX::class),
-    BITWARDEN("Bitwarden", BitwardenIMEX::class);
+enum class SupportedIMEX(
+    /** The class supporting the IMEX. */
+    val imex: KClass<out IMEX>,
+    /** The formal name of the service for which IMEX is supported. */
+    val formalName: String
+) {
+    LASTPASS(LastPassIMEX::class, "LastPass"),
+    BITWARDEN(BitwardenIMEX::class, "Bitwarden");
 
     override fun toString() = formalName
 
     companion object {
-        fun forClass(clazz: KClass<out IMEX>) = values().firstOrNull { it.clazz == clazz }
+        fun forClass(clazz: KClass<out IMEX>) = values().firstOrNull { it.imex == clazz }
     }
 }
 
