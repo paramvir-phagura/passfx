@@ -7,6 +7,7 @@ import javafx.geometry.Insets
 import javafx.geometry.Pos
 import tornadofx.*
 
+/** A view to display info about a particular database. */
 class DatabasePropertiesView : Fragment() {
     private val database: Database by param()
 
